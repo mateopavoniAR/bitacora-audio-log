@@ -1,0 +1,27 @@
+# React
+node_modules/
+dist/
+build/
+.npm
+*.log
+
+# .NET
+bin/
+obj/
+out/
+.vs/
+*.user
+*.userosscache
+*.suo
+
+# Entorno y config local
+.env
+.env.local
+*.local
+
+# S.O
+.DS_Store
+Thumbs.db
+
+# Docker
+*.override.yml
