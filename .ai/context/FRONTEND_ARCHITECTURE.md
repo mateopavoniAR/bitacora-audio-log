@@ -40,9 +40,12 @@
 │   ├── assets/                  # Logos y recursos gráficos
 │   ├── components/              # Componentes de la interfaz de usuario
 │   │   ├── NotaForm.tsx         # Formulario retro con validaciones en cliente y preview sonoro
-│   │   └── NotaList.tsx         # Listado en rack analógico con reproducción y eliminación
+│   │   ├── NotaList.tsx         # Listado en rack analógico con paginación local, reproducción, edición y eliminación (modales)
+│   │   ├── AutoDismissAlert.tsx # Alerta temporal con auto-dismiss a los 4 s y transición suave
+│   │   ├── ConfirmModal.tsx     # Modal retro de confirmación para eliminación (reemplaza window.confirm)
+│   │   └── EditNotaModal.tsx    # Modal retro de edición que invoca PUT /api/notasaudio/{id}
 │   ├── services/
-│   │   └── api.ts               # Cliente HTTP para endpoints /api/notasaudio y /health
+│   │   └── api.ts               # Cliente HTTP para endpoints /api/notasaudio (GET/POST/PUT/DELETE) y /health
 │   ├── types/
 │   │   └── notaAudio.ts         # Contratos de tipos derivados de API_CONTRACT.md
 │   ├── utils/
@@ -68,6 +71,7 @@
 Implementa las siguientes operaciones asíncronas:
 - `getNotas(): Promise<NotaAudio[]>`: Consume `GET /api/notasaudio`.
 - `createNota(dto: CreateNotaAudioDto): Promise<NotaAudio>`: Consume `POST /api/notasaudio`.
+- `updateNota(id: number, dto: UpdateNotaAudioDto): Promise<NotaAudio>`: Consume `PUT /api/notasaudio/{id}` (asigna `fechaModificacion` en servidor).
 - `deleteNota(id: number): Promise<void>`: Consume `DELETE /api/notasaudio/{id}`.
 - `getHealth(): Promise<HealthStatus>`: Consume `GET /health`.
 
@@ -81,14 +85,27 @@ Implementa las siguientes operaciones asíncronas:
    - Incluye botón de prueba acústica en tiempo real antes del guardado.
    - Comunica la creación al componente padre vía callback `onNotaRegistrada`.
 2. **`NotaList.tsx`:**
-   - Visualiza registros con títulos, etiquetas y lecturas de Hz en pantalla oscura digital.
-   - Incorpora botón para reproducir el tono de cada nota individualmente.
-   - Permite eliminar registros con confirmación nativa `window.confirm`.
-3. **`App.tsx`:**
-   - Chasis unificado de la consola.
-   - Consulta inicial mediante `useEffect` al montar la aplicación.
-   - Manejo reactivo de adición y eliminación de notas.
-   - Módulo superior de oscilador con display de frecuencia activa y botones de acceso rápido a frecuencias estándar (60 Hz, 440 Hz, 1 kHz, 5 kHz).
+    - Visualiza registros con títulos, etiquetas y lecturas de Hz en pantalla oscura digital.
+    - **Paginación local en cliente:** 4 notas por página con controles retro "< ANTERIOR" / "SIGUIENTE >" y lectura "Página X de Y".
+    - Incorpora botón para reproducir el tono de cada nota individualmente.
+    - Botón "Editar" en cada tarjeta que abre `EditNotaModal`.
+    - Eliminación mediante `ConfirmModal` retro (no usa `window.confirm` nativo).
+    - Si la nota posee `fechaModificacion`, renderiza el texto "Editado: [fecha/hora]".
+ 3. **`ConfirmModal.tsx`:**
+    - Modal retro estilizado (backdrop oscuro + panel con sombra mecánica) para confirmar la eliminación.
+    - Recibe `abierto`, `tituloNota`, `confirmando`, `onConfirmar` y `onCancelar`. Renderiza `null` cuando está cerrado.
+ 4. **`EditNotaModal.tsx`:**
+    - Modal retro que permite modificar Título, Etiqueta y Frecuencia Hz con preview acústico ("Probar").
+    - Al guardar invoca `updateNota` (`PUT /api/notasaudio/{id}`) y notifica al padre con la entidad actualizada.
+    - Se re-monta por nota (`key={nota.id}`) para inicializar sus campos sin efectos secundarios.
+ 5. **`AutoDismissAlert.tsx`:**
+    - Alerta temporal que recibe `mensaje` y `tipo` (`success` | `error`).
+    - Desvanece a los 3.5 s y se desmonta a los 4 s mediante `setTimeout`, con transición suave CSS.
+ 6. **`App.tsx`:**
+    - Chasis unificado de la consola. Cabecera simplificada (sin subtítulo "Acoustic Calibration & Session Console", sin punto rojo decorativo ni badge "OSC-01").
+    - Consulta inicial mediante `useEffect` al montar la aplicación.
+    - Manejo reactivo de adición y edición de notas; notificaciones temporales (`AutoDismissAlert`) para crear/editar/eliminar.
+    - Módulo superior de oscilador con display de frecuencia activa y botones de acceso rápido a frecuencias estándar (60 Hz, 440 Hz, 1 kHz, 5 kHz) con mayor espaciado.
 
 ---
 

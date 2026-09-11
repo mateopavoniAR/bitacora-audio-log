@@ -20,7 +20,11 @@ Este documento describe la arquitectura real, patrones y componentes del backend
   │   ├── AppDbContext.cs              # DbContext de EF Core
   │   └── ConnectionStringHelper.cs    # Utilidad de resolución de conexiones PostgreSQL
   ├── DTOs/
-  │   └── CreateNotaAudioDto.cs        # DTO de entrada para POST
+  │   ├── CreateNotaAudioDto.cs        # DTO de entrada para POST
+  │   └── UpdateNotaAudioDto.cs        # DTO de entrada para PUT
+  ├── Migrations/                      # Migraciones EF Core generadas
+  │   ├── AppDbContextModelSnapshot.cs
+  │   └── 20260911170120_AddFechaModificacion.cs  # Agrega columna fecha_modificacion
   ├── Models/
   │   └── NotaAudio.cs                 # Entidad de dominio
   ├── tests/
@@ -49,11 +53,12 @@ Este documento describe la arquitectura real, patrones y componentes del backend
   - Proveedor: `Npgsql.EntityFrameworkCore.PostgreSQL` v8.0.4.
   - Configuración Fluent API en `AppDbContext.OnModelCreating`.
   - Estrategia de inicialización: `context.Database.EnsureCreated()` ejecutada en un `IServiceScope` dentro de `Program.cs`.
-  - **No existen migraciones de EF Core `[FACT]`:** No se detecta la carpeta `Migrations/` ni archivos `.Designer.cs` de migración. El esquema se genera o valida únicamente mediante `EnsureCreated()`.
+  - **Migraciones EF Core `[FACT]`:** Existe la carpeta `Migrations/` con la migración `AddFechaModificacion` (agrega la columna nullable `fecha_modificacion`). Sin embargo, **a nivel runtime se sigue usando `EnsureCreated()`**, por lo que la migración queda como documentación evolutiva y no se aplica con `Database.Migrate()`. Las bases creadas con `EnsureCreated()` antes de este cambio no recibirán la columna automáticamente (En `EnsureCreated()` no altera esquemas existentes).
   - Resiliencia de conexión: Configurada mediante `EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10))`.
 - **Patrón DTO Asimétrico `[FACT]`:**
-  - Se utiliza `CreateNotaAudioDto` exclusivamente para recibir datos en `POST /api/notasaudio`.
+  - Se utiliza `CreateNotaAudioDto` para recibir datos en `POST /api/notasaudio` y `UpdateNotaAudioDto` para `PUT /api/notasaudio/{id}`.
   - Los endpoints de lectura (`GET /api/notasaudio` y `GET /api/notasaudio/{id}`) retornan directamente la entidad de dominio `NotaAudio` sin mediar un `ReadNotaAudioDto`.
+  - `PUT` devuelve la entidad actualizada con ambas marcas de tiempo (`FechaCreacion` y `FechaModificacion`).
 - **Minimal API vs. Controller Base `[FACT]`:**
   - Minimal APIs se utilizan para utilidades de infraestructura: `GET /health` y `GET /` (redirección a `/swagger`).
   - Controllers clásicos (`ControllerBase` con atributos `[ApiController]` y `[Route]`) se utilizan para los endpoints de negocio en `NotasAudioController`.
@@ -79,6 +84,7 @@ Definida en `BitacoraAudio.Api.Models.NotaAudio`:
 - `Etiqueta` (`string`): Opcional, longitud máxima 100 caracteres. Mapeado a la columna `etiqueta`. Por defecto `string.Empty`.
 - `FrecuenciaHz` (`double`): Obligatorio, valor positivo en Hertz. Mapeado a la columna `frecuencia_hz`.
 - `FechaCreacion` (`DateTime`): Obligatorio, timestamp UTC. Mapeado a la columna `fecha_creacion`.
+- `FechaModificacion` (`DateTime?`): Opcional/nulleable, timestamp UTC de última edición. Mapeado a la columna `fecha_modificacion`. Se asigna `DateTime.UtcNow` en el endpoint `PUT`. Permanece `null` para notas nunca editadas.
 - **Reglas de Dominio en el Modelo `[FACT]`:** La clase cuenta con un constructor secundario que arroja `ArgumentException` si `titulo` es nulo/espacio en blanco, y `ArgumentOutOfRangeException` si `frecuenciaHz <= 0`.
 - **Tabla en Base de Datos `[FACT]`:** Mapeada a `"notas_audio"` en `AppDbContext.cs`.
 - **Relaciones `[FACT]`:** Ninguna. Es una entidad aislada sin claves foráneas ni tablas vinculadas.
@@ -110,9 +116,10 @@ Definida en `BitacoraAudio.Api.Models.NotaAudio`:
        ```
   2. **Formato Personalizado con Tipo Anónimo `[FACT]`:**
      - Generado manualmente en el controlador ante recursos no encontrados o validaciones adicionales:
-       - `GetById(id)` retorna `404 Not Found` con `{ "mensaje": "No se encontró la nota de audio con Id {id}." }`.
-       - `Delete(id)` retorna `404 Not Found` con `{ "mensaje": "No se encontró la nota de audio con Id {id} para eliminar." }`.
-       - `Create(dto)` retorna `400 Bad Request` con `{ "mensaje": "El título de la nota no puede estar vacío." }` o `{ "mensaje": "La frecuencia en Hertz debe ser un valor mayor a 0." }`.
+- `GetById(id)` retorna `404 Not Found` con `{ "mensaje": "No se encontró la nota de audio con Id {id}." }`.
+        - `Delete(id)` retorna `404 Not Found` con `{ "mensaje": "No se encontró la nota de audio con Id {id} para eliminar." }`.
+        - `Update(id, dto)` retorna `404 Not Found` con `{ "mensaje": "No se encontró la nota de audio con Id {id} para actualizar." }`.
+        - `Create(dto)` retorna `400 Bad Request` con `{ "mensaje": "El título de la nota no puede estar vacío." }` o `{ "mensaje": "La frecuencia en Hertz debe ser un valor mayor a 0." }` (compartido con `Update`).
   3. **Excepciones no Controladas (500) `[FACT]`:**
      - No existe un middleware global de manejo de excepciones (`UseExceptionHandler` o filtro personalizado). Los errores no capturados retornarán el comportamiento estándar del pipeline de ASP.NET Core.
 
@@ -161,6 +168,7 @@ Definida en `BitacoraAudio.Api.Models.NotaAudio`:
     - `Etiqueta` -> `etiqueta`
     - `FrecuenciaHz` -> `frecuenciaHz`
     - `FechaCreacion` -> `fechaCreacion`
+    - `FechaModificacion` -> `fechaModificacion` (nullable)
   - Respuestas de error personalizadas: propiedad en minúsculas: `mensaje`.
   - Diccionario de errores en `ValidationProblemDetails`: nombres de campo con la mayúscula original del DTO (`Titulo`, `FrecuenciaHz`).
 

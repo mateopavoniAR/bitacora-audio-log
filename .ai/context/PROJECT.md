@@ -25,16 +25,16 @@ El proyecto resuelve la necesidad de registrar sesiones de prueba de audio, prue
   - Listado completo de notas ordenadas cronológicamente descendente.
   - Consulta de una nota individual por ID.
   - Creación de una nota con validaciones de campos (título, etiqueta, frecuencia en Hz > 0).
+  - **Edición de Título, Etiqueta y FrecuenciaHz vía `PUT /api/notasaudio/{id}`, con marca de tiempo `FechaModificacion` (UTC) asignada automáticamente.**
   - Eliminación física de una nota por ID.
 - Healthcheck básico del servicio en `/health`.
 - Documentación OpenAPI / Swagger activa en todos los entornos estándar.
-- Verificación automática de creación de esquema de base de datos (`EnsureCreated()`).
+- Verificación automática de creación de esquema de base de datos (`EnsureCreated()`). Existe la migración EF `AddFechaModificacion` como evolución documentada del esquema.
 
 ### Alcance No Implementado / Fuera de Alcance Actual
 - **Autenticación y Autorización:** No existe login, usuarios ni roles. Todos los recursos son públicos. `[FACT]`
 - **Almacenamiento de Archivos de Audio Binarios:** El sistema almacena metadatos y valores numéricos de frecuencia (`frecuenciaHz`), no archivos de audio (WAV, MP3) en disco o blob storage. `[FACT]`
-- **Paginación y Filtros Avanzados:** La API no soporta query params para paginar (`page`, `pageSize`) ni filtrar por etiqueta o texto. `[FACT]`
-- **Edición / Actualización (PUT o PATCH):** No existen endpoints para modificar una nota ya creada. `[FACT]`
+- **Paginación y Filtros Avanzados en Servidor:** La API no soporta query params para paginar (`page`, `pageSize`) ni filtrar por etiqueta o texto. El frontend implementa paginación local en memoria. `[FACT]`
 
 ## 5. Estrategia de Ramas y Entornos
 Según `CONTEXT.md` del repositorio:

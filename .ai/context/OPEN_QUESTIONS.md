@@ -35,6 +35,15 @@
 - **Estado:** `[RESUELTO]`
 - **Resolución:** Construcción multi-stage en [Dockerfile](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/frontend/Dockerfile) (Node 20 Alpine para build + Nginx Alpine para runtime) con soporte SPA en [nginx.conf](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/frontend/nginx.conf).
 
+### Decisión F-07: Refactor de UX/UI (Paginación, Modales, Notificaciones y Edición)
+- **Estado:** `[RESUELTO]`
+- **Resolución:** Refactor integral de experiencia de usuario implementado en [components](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/frontend/src/components):
+  - **Eliminación:** Se eliminó `window.confirm` nativo en favor del modal retro [ConfirmModal.tsx](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/frontend/src/components/ConfirmModal.tsx).
+  - **Edición:** Nuevo [EditNotaModal.tsx](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/frontend/src/components/EditNotaModal.tsx) que consume `PUT /api/notasaudio/{id}` y muestra la marca "Editado: [fecha/hora]" en las tarjetas.
+  - **Paginación:** Paginación local en cliente (4 notas por página) en [NotaList.tsx](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/frontend/src/components/NotaList.tsx) con controles retro.
+  - **Notificaciones:** Componente auto-dismiss [AutoDismissAlert.tsx](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/frontend/src/components/AutoDismissAlert.tsx) (4 s) para feedback de crear/editar/eliminar.
+  - **Limpieza visual:** Cabecera simplificada sin subtítulo, sin punto rojo decorativo y sin badge "OSC-01"; botones de calibración con mayor espaciado.
+
 ---
 
 ## 2. Dudas e Incógnitas Pendientes (Backend y DevOps)
@@ -46,11 +55,13 @@
 
 ### 2.2 Paginación y Filtrado en Servidor
 - **`[UNKNOWN]` ¿Se agregará paginación al endpoint `GET /api/notasaudio`?**
-  - *Estado actual:* Devuelve el conjunto completo ordenado por fecha descendente. Para el volumen actual funciona de manera óptima.
+  - *Estado actual:* Devuelve el conjunto completo ordenado por fecha descendente. **El frontend ya implementa paginación local en memoria** (4 notas por página en `NotaList.tsx`). Para el volumen actual la paginación en cliente es la opción elegida.
 
 ### 2.3 Evolución de la Base de Datos y Migraciones
-- **`[UNKNOWN]` ¿Se mantendrá `context.Database.EnsureCreated()` o se inicializará EF Core Migrations?**
-  - *Estado actual:* No existen archivos de migración en `/backend`.
+- **`[RESUELTO A MEDIAS]` ¿Se mantendrá `context.Database.EnsureCreated()` o se inicializará EF Core Migrations?**
+  - *Estado actual:* Existe la migración `AddFechaModificacion` en `/backend/Migrations`, pero el runtime sigue usando `EnsureCreated()`, por lo que la migración **no se aplica automáticamente**. Las bases creadas con `EnsureCreated()` previamente no recibirán la columna `fecha_modificacion` por sí solas.
+  - *Impacto:* Si se adopta `Database.Migrate()` en el futuro, la base existente debe reconciliarse (bastaría con `AddColumn` ya que la migración es aditiva) o recrearse el volumen de Docker.
+- **`[UNKNOWN]` Migración inicial:** La migración `AddFechaModificacion` no incluye `CreateTable` (el esquema base fue generado por `EnsureCreated`). En un entorno nuevo que dependa exclusivamente de migraciones, se requeriría una migración inicial con el esquema completo.
 
 ### 2.4 Infraestructura y Orquestación Local
 - **`[UNKNOWN]` Creación del `docker-compose.yml` en la raíz:**

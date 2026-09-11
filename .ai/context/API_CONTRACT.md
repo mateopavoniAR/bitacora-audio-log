@@ -74,6 +74,7 @@ Generado ante excepciones no controladas de la base de datos o runtime:
 - **Paginación `[FACT]`:** **NO soportada**. El backend no acepta parámetros como `page`, `pageSize`, `limit`, o `offset`.
 - **Filtros `[FACT]`:** **NO soportados**. No existen query params como `?etiqueta=...`, `?search=...`, ni filtros por rango de fechas o frecuencias.
 - **Ordenamiento `[FACT]`:** El listado se entrega siempre pre-ordenado de forma descendente por `fechaCreacion` (`OrderByDescending(n => n.FechaCreacion)`).
+- **Paginación en Cliente `[FACT]`:** El frontend implementa **paginación local en memoria** (4 notas por página) en `NotaList.tsx` sobre el conjunto completo devuelto por `GET /api/notasaudio`. El backend permanece agnóstico a la paginación.
 - **Recomendación para el Frontend:** Si se requiere filtrar por etiqueta o buscar por título en la versión inicial, dicho filtrado deberá realizarse **en memoria en el cliente React** sobre el conjunto devuelto por `GET /api/notasaudio`.
 
 ---
@@ -122,14 +123,16 @@ Retorna la colección completa de notas de audio registradas, ordenadas de la m�
       "titulo": "Tono de Calibración Estándar A4",
       "etiqueta": "Calibración",
       "frecuenciaHz": 440.0,
-      "fechaCreacion": "2026-09-11T10:15:30Z"
+      "fechaCreacion": "2026-09-11T10:15:30Z",
+      "fechaModificacion": null
     },
     {
       "id": 2,
       "titulo": "Sub-bajo de prueba acústica",
       "etiqueta": "Bajos",
       "frecuenciaHz": 60.0,
-      "fechaCreacion": "2026-09-11T09:00:00Z"
+      "fechaCreacion": "2026-09-11T09:00:00Z",
+      "fechaModificacion": null
     }
   ]
   ```
@@ -152,7 +155,8 @@ Consulta el detalle de una nota específica por su identificador numérico.
     "titulo": "Tono de Calibración Estándar A4",
     "etiqueta": "Calibración",
     "frecuenciaHz": 440.0,
-    "fechaCreacion": "2026-09-11T10:15:30Z"
+    "fechaCreacion": "2026-09-11T10:15:30Z",
+    "fechaModificacion": null
   }
   ```
 - **Respuesta de Recurso No Encontrado (`404 Not Found`):**
@@ -199,7 +203,8 @@ Registra una nueva nota de audio y su frecuencia de prueba.
       "titulo": "Tono de Prueba 1 kHz",
       "etiqueta": "Referencia",
       "frecuenciaHz": 1000.0,
-      "fechaCreacion": "2026-09-11T12:00:00Z"
+      "fechaCreacion": "2026-09-11T12:00:00Z",
+      "fechaModificacion": null
     }
     ```
 - **Respuestas de Error (`400 Bad Request`):**
@@ -230,7 +235,69 @@ Registra una nueva nota de audio y su frecuencia de prueba.
 
 ---
 
-### 5.6 Eliminar una Nota de Audio
+### 5.6 Actualizar una Nota de Audio
+Actualiza el título, la etiqueta y la frecuencia de una nota existente, marcando su timestamp de modificación en `fechaModificacion`.
+
+- **Método:** `PUT`
+- **Ruta:** `/api/notasaudio/{id}`
+- **Parámetros de Ruta:**
+  - `id` (`integer`, requerido): Identificador entero de la nota a actualizar.
+- **Headers Requeridos:**
+  - `Content-Type: application/json`
+  - `Accept: application/json`
+- **Autenticación:** No requerida
+- **Cuerpo de la Petición (`UpdateNotaAudioDto`):**
+  ```json
+  {
+    "titulo": "Tono de Prueba 1 kHz (recalibrado)",
+    "etiqueta": "Referencia",
+    "frecuenciaHz": 1000.0
+  }
+  ```
+- **Reglas de Validación de los Campos:**
+  | Campo | Tipo | Obligatorio | Restricciones / Reglas |
+  | :--- | :--- | :--- | :--- |
+  | `titulo` | `string` | **Sí** | Máximo 200 caracteres. No puede ser vacío ni consistir solo de espacios en blanco. |
+  | `etiqueta` | `string` | No | Máximo 100 caracteres. Si se omite, se guarda `""`. |
+  | `frecuenciaHz` | `number` (double) | **Sí** | Valor mayor a 0. Rango válido: `0.01` a `200000.0`. |
+
+- **Respuesta Exitosa (`200 OK`):**
+  ```json
+  {
+    "id": 3,
+    "titulo": "Tono de Prueba 1 kHz (recalibrado)",
+    "etiqueta": "Referencia",
+    "frecuenciaHz": 1000.0,
+    "fechaCreacion": "2026-09-11T12:00:00Z",
+    "fechaModificacion": "2026-09-11T13:45:12Z"
+  }
+  ```
+  *El servidor asigna automáticamente `fechaModificacion = DateTime.UtcNow` al momento de guardar.*
+
+- **Respuestas de Error (`400 Bad Request`):**
+  - *Por validación de DataAnnotations:* Estructura `ValidationProblemDetails` con diccionario `errors` (claves `Titulo`, `FrecuenciaHz`).
+  - *Por validación explícita de título vacío:*
+    ```json
+    {
+      "mensaje": "El título de la nota no puede estar vacío."
+    }
+    ```
+  - *Por validación explícita de frecuencia menor o igual a cero:*
+    ```json
+    {
+      "mensaje": "La frecuencia en Hertz debe ser un valor mayor a 0."
+    }
+    ```
+- **Respuesta de Recurso No Encontrado (`404 Not Found`):**
+  ```json
+  {
+    "mensaje": "No se encontró la nota de audio con Id 99 para actualizar."
+  }
+  ```
+
+---
+
+### 5.7 Eliminar una Nota de Audio
 Elimina físicamente un registro de nota de audio existente a partir de su ID.
 
 - **Método:** `DELETE`
@@ -254,13 +321,14 @@ Elimina físicamente un registro de nota de audio existente a partir de su ID.
 Estos tipos representan el esquema exacto de intercambio de datos:
 
 ```typescript
-// Entidad devuelta por GET y POST
+// Entidad devuelta por GET, POST y PUT
 export interface NotaAudio {
   id: number;
   titulo: string;
   etiqueta: string;
   frecuenciaHz: number;
   fechaCreacion: string; // ISO 8601 string (ej: "2026-09-11T12:00:00Z")
+  fechaModificacion?: string; // ISO 8601 string, solo presente si la nota fue editada
 }
 
 // Payload de entrada para POST /api/notasaudio
@@ -269,6 +337,13 @@ export interface CreateNotaAudioDto {
   etiqueta?: string;
   frecuenciaHz: number;
   fechaCreacion?: string; // Opcional, ISO 8601
+}
+
+// Payload de entrada para PUT /api/notasaudio/{id}
+export interface UpdateNotaAudioDto {
+  titulo: string;
+  etiqueta?: string;
+  frecuenciaHz: number;
 }
 
 // Respuesta de error estándar RFC 7807/9110 (ValidationProblemDetails)

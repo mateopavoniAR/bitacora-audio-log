@@ -20,6 +20,7 @@ Este documento define las reglas de codificación, nombrado, comunicación y con
 3. **Verbos y Semántica HTTP:**
    - `GET`: Recuperación idempotente de recursos. No debe provocar efectos secundarios.
    - `POST`: Creación de un nuevo recurso. Requiere cabecera `Content-Type: application/json`. Retorna `201 Created` con encabezado `Location` y el objeto creado.
+   - `PUT`: Actualización total de un recurso existente por ID. Requiere cabecera `Content-Type: application/json`. Retorna `200 OK` con la entidad actualizada. Al guardar se asigna `FechaModificacion = DateTime.UtcNow`.
    - `DELETE`: Eliminación idempotente de un recurso. Retorna `204 No Content` si la eliminación fue exitosa, o `404 Not Found` si el recurso no existía.
 
 4. **Códigos de Estado HTTP Utilizados:**
@@ -60,6 +61,9 @@ Este documento define las reglas de codificación, nombrado, comunicación y con
    - Co-locación de estilos y pruebas junto a la feature (`features/notasaudio/components/NotaAudioCard.tsx`).
 3. **Tipado Estricto:**
    - Prohibido el uso de `any`. Toda respuesta de API debe tiparse con interfaces que cumplan con el `API_CONTRACT.md`.
+4. **Interacción del Usuario:**
+   - Prohibido el uso de diálogos nativos del navegador (`window.confirm`, `alert`, `prompt`). Toda confirmación o feedback debe implementarse con componentes propios (modales y alertas auto-dismiss estilo synth).
+   - Las alertas temporales se centralizan en `AutoDismissAlert` (auto-dismiss a 4 segundos).
 
 ---
 
