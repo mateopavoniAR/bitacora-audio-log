@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import type { NotaAudio } from './types/notaAudio'
-import { getNotas, deleteNota, mensajeErrorRed } from './services/api'
+import { getNotas, deleteNota, mensajeErrorRed, API_BASE_URL } from './services/api'
 import { reproducirTono } from './utils/audioSynth'
 import { NotaForm } from './components/NotaForm'
 import { NotaList } from './components/NotaList'
@@ -114,7 +114,7 @@ function App() {
             Aviso de Conexión con el Backend
           </strong>
           <p style={{ fontSize: '0.875rem', color: '#1C1917' }}>
-            {errorServidor}. Verificá que el backend esté corriendo en <code>http://localhost:8080</code>.
+            {errorServidor}. Verificá que el backend esté corriendo en <code>{API_BASE_URL}</code>.
           </p>
         </div>
       )}

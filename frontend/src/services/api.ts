@@ -5,8 +5,12 @@
 
 import type { NotaAudio, CreateNotaAudioDto, UpdateNotaAudioDto, HealthStatus } from '../types/notaAudio'
 
-// URL base del backend configurada por variable de entorno con fallback al puerto de Docker
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+// URL base del backend configurada por variable de entorno con fallback al puerto de desarrollo local
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+
+const RESPUESTA_INESPERADA = 'El servidor devolvió una respuesta inesperada. Intente nuevamente más tarde.'
+const MENSAJE_CONEXION = 'No se pudo establecer conexión con el servidor backend.'
+const ES_TECNICO = /Unexpected token|<!doctype|not valid JSON|SyntaxError/i
 
 /**
  * Función auxiliar para procesar errores devueltos por la API (ProblemDetails o { mensaje: string }).
@@ -30,19 +34,49 @@ async function procesarError(response: Response): Promise<string> {
     }
     return 'Error en la petición al servidor.'
   } catch {
-    // Si la respuesta no es JSON (ej. error de conexión o respuesta vacía)
+    // Si la respuesta no es JSON (ej. HTML, error de conexión o respuesta vacía)
     return `Error en la petición al servidor (código ${response.status}).`
   }
+}
+
+async function leerJson(response: Response): Promise<unknown> {
+  try {
+    return await response.json()
+  } catch {
+    return null
+  }
+}
+
+async function solicitar<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init)
+
+  if (!response.ok) {
+    const detalle = await procesarError(response)
+    throw new Error(detalle)
+  }
+
+  const datos = await leerJson(response)
+  if (datos === null) {
+    throw new Error(RESPUESTA_INESPERADA)
+  }
+
+  return datos as T
 }
 
 /**
  * Traduce cualquier error de red/lanzado a un mensaje legible y seguro para el usuario.
  */
 export function mensajeErrorRed(err: unknown): string {
-  if (err instanceof Error && err.message && err.message !== 'Failed to fetch' && err.message !== 'fetch failed') {
+  if (
+    err instanceof Error &&
+    err.message &&
+    err.message !== 'Failed to fetch' &&
+    err.message !== 'fetch failed' &&
+    !ES_TECNICO.test(err.message)
+  ) {
     return err.message
   }
-  return 'No se pudo establecer conexión con el servidor backend.'
+  return MENSAJE_CONEXION
 }
 
 /**
@@ -50,18 +84,11 @@ export function mensajeErrorRed(err: unknown): string {
  * GET /api/notasaudio
  */
 export async function getNotas(): Promise<NotaAudio[]> {
-  const response = await fetch(`${BASE_URL}/api/notasaudio`, {
+  return solicitar<NotaAudio[]>(`${API_BASE_URL}/api/notasaudio`, {
     headers: {
       Accept: 'application/json',
     },
   })
-
-  if (!response.ok) {
-    const detalle = await procesarError(response)
-    throw new Error(detalle)
-  }
-
-  return response.json()
 }
 
 /**
@@ -69,7 +96,7 @@ export async function getNotas(): Promise<NotaAudio[]> {
  * POST /api/notasaudio
  */
 export async function createNota(dto: CreateNotaAudioDto): Promise<NotaAudio> {
-  const response = await fetch(`${BASE_URL}/api/notasaudio`, {
+  return solicitar<NotaAudio>(`${API_BASE_URL}/api/notasaudio`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -77,13 +104,6 @@ export async function createNota(dto: CreateNotaAudioDto): Promise<NotaAudio> {
     },
     body: JSON.stringify(dto),
   })
-
-  if (!response.ok) {
-    const detalle = await procesarError(response)
-    throw new Error(detalle)
-  }
-
-  return response.json()
 }
 
 /**
@@ -91,7 +111,7 @@ export async function createNota(dto: CreateNotaAudioDto): Promise<NotaAudio> {
  * PUT /api/notasaudio/{id}
  */
 export async function updateNota(id: number, dto: UpdateNotaAudioDto): Promise<NotaAudio> {
-  const response = await fetch(`${BASE_URL}/api/notasaudio/${id}`, {
+  return solicitar<NotaAudio>(`${API_BASE_URL}/api/notasaudio/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -99,13 +119,6 @@ export async function updateNota(id: number, dto: UpdateNotaAudioDto): Promise<N
     },
     body: JSON.stringify(dto),
   })
-
-  if (!response.ok) {
-    const detalle = await procesarError(response)
-    throw new Error(detalle)
-  }
-
-  return response.json()
 }
 
 /**
@@ -113,7 +126,7 @@ export async function updateNota(id: number, dto: UpdateNotaAudioDto): Promise<N
  * DELETE /api/notasaudio/{id}
  */
 export async function deleteNota(id: number): Promise<void> {
-  const response = await fetch(`${BASE_URL}/api/notasaudio/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/notasaudio/${id}`, {
     method: 'DELETE',
   })
 
@@ -128,16 +141,9 @@ export async function deleteNota(id: number): Promise<void> {
  * GET /health
  */
 export async function getHealth(): Promise<HealthStatus> {
-  const response = await fetch(`${BASE_URL}/health`, {
+  return solicitar<HealthStatus>(`${API_BASE_URL}/health`, {
     headers: {
       Accept: 'application/json',
     },
   })
-
-  if (!response.ok) {
-    const detalle = await procesarError(response)
-    throw new Error(detalle)
-  }
-
-  return response.json()
 }
