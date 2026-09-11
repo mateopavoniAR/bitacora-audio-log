@@ -74,6 +74,7 @@ Implementa las siguientes operaciones asíncronas:
 - `updateNota(id: number, dto: UpdateNotaAudioDto): Promise<NotaAudio>`: Consume `PUT /api/notasaudio/{id}` (asigna `fechaModificacion` en servidor).
 - `deleteNota(id: number): Promise<void>`: Consume `DELETE /api/notasaudio/{id}`.
 - `getHealth(): Promise<HealthStatus>`: Consume `GET /health`.
+- **Sanitización de errores `[FACT]`:** `procesarError` transforma cualquier `500` en `"Ocurrió un error interno en el servidor. Intente nuevamente más tarde."` y las respuestas no-JSON en un mensaje genérico con código. El helper `mensajeErrorRed` traduce fallos de red (`Failed to fetch`) a `"No se pudo establecer conexión con el servidor backend."`. Ningún detalle interno (stack traces, statusText, SQL) llega al usuario.
 
 ### 3.2 Sintetizador Acústico (`src/utils/audioSynth.ts`)
 - `reproducirTono(frecuenciaHz: number, duracionSegundos: number = 1.2): void`
@@ -83,6 +84,7 @@ Implementa las siguientes operaciones asíncronas:
 1. **`NotaForm.tsx`:**
    - Controla campos de `titulo` (requerido, máx 200), `etiqueta` (opcional, máx 100) y `frecuenciaHz` (requerido, > 0 Hz).
    - Incluye botón de prueba acústica en tiempo real antes del guardado.
+   - Muestra feedback de error inline (validación y fallos del servidor); el feedback de éxito **no se renderiza inline** sino que lo centraliza la alerta temporal global (`AutoDismissAlert`) del componente `App` para mantener un único tipo de notificación.
    - Comunica la creación al componente padre vía callback `onNotaRegistrada`.
 2. **`NotaList.tsx`:**
     - Visualiza registros con títulos, etiquetas y lecturas de Hz en pantalla oscura digital.
@@ -102,7 +104,7 @@ Implementa las siguientes operaciones asíncronas:
     - Alerta temporal que recibe `mensaje` y `tipo` (`success` | `error`).
     - Desvanece a los 3.5 s y se desmonta a los 4 s mediante `setTimeout`, con transición suave CSS.
  6. **`App.tsx`:**
-    - Chasis unificado de la consola. Cabecera simplificada (sin subtítulo "Acoustic Calibration & Session Console", sin punto rojo decorativo ni badge "OSC-01").
+    - Chasis unificado de la consola. Cabecera simplificada (sin subtítulo "Acoustic Calibration & Session Console", sin punto rojo decorativo, sin badge "OSC-01" ni badge "VITE + .NET 8").
     - Consulta inicial mediante `useEffect` al montar la aplicación.
     - Manejo reactivo de adición y edición de notas; notificaciones temporales (`AutoDismissAlert`) para crear/editar/eliminar.
     - Módulo superior de oscilador con display de frecuencia activa y botones de acceso rápido a frecuencias estándar (60 Hz, 440 Hz, 1 kHz, 5 kHz) con mayor espaciado.

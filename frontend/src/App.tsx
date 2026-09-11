@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import type { NotaAudio } from './types/notaAudio'
-import { getNotas, deleteNota } from './services/api'
+import { getNotas, deleteNota, mensajeErrorRed } from './services/api'
 import { reproducirTono } from './utils/audioSynth'
 import { NotaForm } from './components/NotaForm'
 import { NotaList } from './components/NotaList'
@@ -26,11 +26,7 @@ function App() {
       const datos = await getNotas()
       setNotas(datos)
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setErrorServidor(err.message)
-      } else {
-        setErrorServidor('No se pudo establecer conexión con el servidor backend.')
-      }
+      setErrorServidor(mensajeErrorRed(err))
     } finally {
       setCargando(false)
     }
@@ -58,7 +54,7 @@ function App() {
       setNotas((prev) => prev.filter((nota) => nota.id !== id))
       setAlerta({ mensaje: 'Nota eliminada correctamente.', tipo: 'success' })
     } catch (err: unknown) {
-      const mensaje = err instanceof Error ? err.message : 'Error al intentar eliminar'
+      const mensaje = mensajeErrorRed(err)
       setAlerta({ mensaje, tipo: 'error' })
       throw err
     }
@@ -88,7 +84,6 @@ function App() {
           >
             {cargando ? 'Cargando...' : 'Actualizar'}
           </button>
-          <span className="synth-badge">VITE + .NET 8</span>
         </div>
       </header>
 

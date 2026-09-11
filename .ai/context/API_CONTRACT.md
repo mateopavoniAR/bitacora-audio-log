@@ -67,6 +67,11 @@ Generado ante excepciones no controladas de la base de datos o runtime:
 - Código de estado: `500`.
 - El frontend debe capturarlo como fallback genérico: *"Ocurrió un error interno en el servidor. Intente nuevamente más tarde."*
 
+### Caso D: Fallo de Red / Backend Caído
+Generado cuando la petición no alcanza al backend (proceso detenido, puerto cerrado, DNS):
+- El error nativo del navegador (`Failed to fetch`) se traduce en el cliente a: *"No se pudo establecer conexión con el servidor backend."*
+- **Directiva `[FACT]`:** Está prohibido exponer al usuario texto crudo de errores (códigos HTTP con statusText en inglés, stack traces, SQL). Todos los errores pasan por la normalización del cliente (`procesarError` + `mensajeErrorRed` en `frontend/src/services/api.ts`).
+
 ---
 
 ## 4. Parámetros de Consulta, Filtros y Paginación

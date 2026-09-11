@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import type { NotaAudio, UpdateNotaAudioDto } from '../types/notaAudio'
-import { updateNota } from '../services/api'
+import { updateNota, mensajeErrorRed } from '../services/api'
 import { reproducirTono } from '../utils/audioSynth'
 
 interface EditNotaModalProps {
@@ -53,7 +53,7 @@ export function EditNotaModal({ nota, onCerrar, onNotaActualizada }: EditNotaMod
       onNotaActualizada(actualizada)
       onCerrar()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al guardar los cambios.')
+      setError(mensajeErrorRed(err))
     } finally {
       setCargando(false)
     }

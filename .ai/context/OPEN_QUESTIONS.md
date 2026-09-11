@@ -58,10 +58,9 @@
   - *Estado actual:* Devuelve el conjunto completo ordenado por fecha descendente. **El frontend ya implementa paginación local en memoria** (4 notas por página en `NotaList.tsx`). Para el volumen actual la paginación en cliente es la opción elegida.
 
 ### 2.3 Evolución de la Base de Datos y Migraciones
-- **`[RESUELTO A MEDIAS]` ¿Se mantendrá `context.Database.EnsureCreated()` o se inicializará EF Core Migrations?**
-  - *Estado actual:* Existe la migración `AddFechaModificacion` en `/backend/Migrations`, pero el runtime sigue usando `EnsureCreated()`, por lo que la migración **no se aplica automáticamente**. Las bases creadas con `EnsureCreated()` previamente no recibirán la columna `fecha_modificacion` por sí solas.
-  - *Impacto:* Si se adopta `Database.Migrate()` en el futuro, la base existente debe reconciliarse (bastaría con `AddColumn` ya que la migración es aditiva) o recrearse el volumen de Docker.
-- **`[UNKNOWN]` Migración inicial:** La migración `AddFechaModificacion` no incluye `CreateTable` (el esquema base fue generado por `EnsureCreated`). En un entorno nuevo que dependa exclusivamente de migraciones, se requeriría una migración inicial con el esquema completo.
+- **`[RESUELTO]` ¿Se mantendrá `context.Database.EnsureCreated()` o se inicializará EF Core Migrations?**
+  - *Resolución:* Se mantiene `EnsureCreated()` y se incorporó una **sincronización aditiva idempotente** en `Program.cs` (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS fecha_modificacion ...`). De esta forma las bases existentes creadas por `EnsureCreated()` reciben la columna nueva al arrancar, sin perder datos ni recrear volúmenes.
+  - *Migración EF:* La migración `AddFechaModificacion` existe como documentación evolutiva del esquema, pero no se aplica vía `Database.Migrate()`.
 
 ### 2.4 Infraestructura y Orquestación Local
 - **`[UNKNOWN]` Creación del `docker-compose.yml` en la raíz:**

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import type { NotaAudio, CreateNotaAudioDto } from '../types/notaAudio'
-import { createNota } from '../services/api'
+import { createNota, mensajeErrorRed } from '../services/api'
 import { reproducirTono } from '../utils/audioSynth'
 
 interface NotaFormProps {
@@ -20,7 +20,6 @@ export function NotaForm({ onNotaRegistrada }: NotaFormProps) {
   // Estados para feedback al usuario
   const [cargando, setCargando] = useState(false)
   const [mensajeError, setMensajeError] = useState<string | null>(null)
-  const [mensajeExito, setMensajeExito] = useState<string | null>(null)
 
   // Escuchar el tono de la frecuencia ingresada antes de guardar
   const handleProbarAudio = () => {
@@ -37,7 +36,6 @@ export function NotaForm({ onNotaRegistrada }: NotaFormProps) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setMensajeError(null)
-    setMensajeExito(null)
 
     // 1. Validación en cliente: Título requerido
     if (!titulo.trim()) {
@@ -63,7 +61,6 @@ export function NotaForm({ onNotaRegistrada }: NotaFormProps) {
       const notaCreada = await createNota(payload)
       
       // Feedback y limpieza del formulario
-      setMensajeExito(`¡Nota "${notaCreada.titulo}" registrada con éxito!`)
       setTitulo('')
       setEtiqueta('')
       setFrecuenciaHz('440')
@@ -76,11 +73,7 @@ export function NotaForm({ onNotaRegistrada }: NotaFormProps) {
         onNotaRegistrada(notaCreada)
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setMensajeError(err.message)
-      } else {
-        setMensajeError('Ocurrió un error inesperado al guardar la nota.')
-      }
+      setMensajeError(mensajeErrorRed(err))
     } finally {
       setCargando(false)
     }
@@ -91,7 +84,6 @@ export function NotaForm({ onNotaRegistrada }: NotaFormProps) {
       {/* Encabezado del Módulo */}
       <div className="synth-module-header">
         <span className="synth-module-title">Registro de Nota Acústica</span>
-        <span className="synth-badge">ENTRADA</span>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -187,22 +179,6 @@ export function NotaForm({ onNotaRegistrada }: NotaFormProps) {
             }}
           >
             {mensajeError}
-          </div>
-        )}
-
-        {mensajeExito && (
-          <div
-            style={{
-              padding: '0.5rem',
-              backgroundColor: '#E8F5E9',
-              border: '1px solid #2E7D32',
-              color: '#1B5E20',
-              fontSize: '0.825rem',
-              borderRadius: '2px',
-              fontWeight: 600,
-            }}
-          >
-            {mensajeExito}
           </div>
         )}
 

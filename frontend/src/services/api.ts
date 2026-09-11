@@ -10,8 +10,13 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 /**
  * Función auxiliar para procesar errores devueltos por la API (ProblemDetails o { mensaje: string }).
+ * Los errores 500 y los fallos de red se transforman en mensajes genéricos no sensibles.
  */
 async function procesarError(response: Response): Promise<string> {
+  if (response.status === 500) {
+    return 'Ocurrió un error interno en el servidor. Intente nuevamente más tarde.'
+  }
+
   try {
     const errorData = await response.json()
     // Caso 1: Error con propiedad personalizada 'mensaje'
@@ -25,9 +30,19 @@ async function procesarError(response: Response): Promise<string> {
     }
     return 'Error en la petición al servidor.'
   } catch {
-    // Si la respuesta no es JSON (ej. 500 o error de conexión)
-    return `Error HTTP ${response.status}: ${response.statusText}`
+    // Si la respuesta no es JSON (ej. error de conexión o respuesta vacía)
+    return `Error en la petición al servidor (código ${response.status}).`
   }
+}
+
+/**
+ * Traduce cualquier error de red/lanzado a un mensaje legible y seguro para el usuario.
+ */
+export function mensajeErrorRed(err: unknown): string {
+  if (err instanceof Error && err.message && err.message !== 'Failed to fetch' && err.message !== 'fetch failed') {
+    return err.message
+  }
+  return 'No se pudo establecer conexión con el servidor backend.'
 }
 
 /**

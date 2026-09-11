@@ -53,7 +53,8 @@ Este documento describe la arquitectura real, patrones y componentes del backend
   - Proveedor: `Npgsql.EntityFrameworkCore.PostgreSQL` v8.0.4.
   - Configuración Fluent API en `AppDbContext.OnModelCreating`.
   - Estrategia de inicialización: `context.Database.EnsureCreated()` ejecutada en un `IServiceScope` dentro de `Program.cs`.
-  - **Migraciones EF Core `[FACT]`:** Existe la carpeta `Migrations/` con la migración `AddFechaModificacion` (agrega la columna nullable `fecha_modificacion`). Sin embargo, **a nivel runtime se sigue usando `EnsureCreated()`**, por lo que la migración queda como documentación evolutiva y no se aplica con `Database.Migrate()`. Las bases creadas con `EnsureCreated()` antes de este cambio no recibirán la columna automáticamente (En `EnsureCreated()` no altera esquemas existentes).
+  - **Migraciones EF Core `[FACT]`:** Existe la carpeta `Migrations/` con la migración `AddFechaModificacion` (agrega la columna nullable `fecha_modificacion`). A nivel runtime se sigue usando `EnsureCreated()`, por lo que la migración queda como documentación evolutiva y no se aplica con `Database.Migrate()`.
+  - **Sincronización aditiva idempotente `[FACT]`:** `Program.cs` ejecuta tras `EnsureCreated()` un `ALTER TABLE notas_audio ADD COLUMN IF NOT EXISTS fecha_modificacion timestamp with time zone NULL;`. Esto resuelve la actualización de bases existentes creadas con `EnsureCreated()` (que no altera esquemas ya existentes) sin necesidad de eliminar volúmenes ni perder datos.
   - Resiliencia de conexión: Configurada mediante `EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10))`.
 - **Patrón DTO Asimétrico `[FACT]`:**
   - Se utiliza `CreateNotaAudioDto` para recibir datos en `POST /api/notasaudio` y `UpdateNotaAudioDto` para `PUT /api/notasaudio/{id}`.

@@ -56,6 +56,8 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<AppDbContext>();
         logger.LogInformation("Verificando y asegurando esquema de base de datos PostgreSQL...");
         context.Database.EnsureCreated();
+        context.Database.ExecuteSqlRaw(
+            "ALTER TABLE notas_audio ADD COLUMN IF NOT EXISTS fecha_modificacion timestamp with time zone NULL;");
         logger.LogInformation("Esquema de base de datos verificado exitosamente.");
     }
     catch (Exception ex)
