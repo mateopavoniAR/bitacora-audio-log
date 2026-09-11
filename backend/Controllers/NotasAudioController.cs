@@ -89,6 +89,48 @@ public class NotasAudioController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = nuevaNota.Id }, nuevaNota);
     }
 
+    // PUT /api/notasaudio/{id} - Actualiza Título, Etiqueta y FrecuenciaHz de una nota existente
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(NotaAudio), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<NotaAudio>> Update(int id, [FromBody] UpdateNotaAudioDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.Titulo))
+        {
+            return BadRequest(new { mensaje = "El título de la nota no puede estar vacío." });
+        }
+
+        if (dto.FrecuenciaHz <= 0)
+        {
+            return BadRequest(new { mensaje = "La frecuencia en Hertz debe ser un valor mayor a 0." });
+        }
+
+        var nota = await _context.NotasAudio.FindAsync(id);
+
+        if (nota == null)
+        {
+            _logger.LogWarning("Nota con Id: {Id} no existe para actualizar.", id);
+            return NotFound(new { mensaje = $"No se encontró la nota de audio con Id {id} para actualizar." });
+        }
+
+        nota.Titulo = dto.Titulo.Trim();
+        nota.Etiqueta = dto.Etiqueta?.Trim() ?? string.Empty;
+        nota.FrecuenciaHz = dto.FrecuenciaHz;
+        nota.FechaModificacion = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Nota con Id: {Id} actualizada correctamente. Frecuencia: {Freq} Hz", nota.Id, nota.FrecuenciaHz);
+
+        return Ok(nota);
+    }
+
     // DELETE /api/notasaudio/{id} - Elimina una nota por su identificador
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

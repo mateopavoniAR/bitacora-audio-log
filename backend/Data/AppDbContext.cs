@@ -41,6 +41,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.FechaCreacion)
                 .IsRequired()
                 .HasColumnName("fecha_creacion");
+
+            entity.Property(e => e.FechaModificacion)
+                .HasColumnName("fecha_modificacion");
         });
     }
 }

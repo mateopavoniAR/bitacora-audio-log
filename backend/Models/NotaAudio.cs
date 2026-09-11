@@ -8,6 +8,7 @@ public class NotaAudio
     public string Etiqueta { get; set; } = string.Empty;
     public double FrecuenciaHz { get; set; }
     public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+    public DateTime? FechaModificacion { get; set; }
 
     // Constructor requerido por Entity Framework Core
     public NotaAudio()

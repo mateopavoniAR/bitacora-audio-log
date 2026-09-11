@@ -57,6 +57,7 @@ public class NotaAudioTests
         Assert.Equal(string.Empty, nota.Etiqueta);
         Assert.Equal(0.0, nota.FrecuenciaHz);
         Assert.NotEqual(default(DateTime), nota.FechaCreacion);
+        Assert.Null(nota.FechaModificacion);
     }
 
     [Theory]
