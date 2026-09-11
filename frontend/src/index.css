@@ -1,0 +1,208 @@
+/* ==========================================================================
+   BITÁCORA DE AUDIO - ESTILOS BASE SYNTH ANALÓGICO (ROJO Y MARFIL)
+   Inspirado en la estética retro de consolas e instrumentación de audio vintage.
+   ========================================================================== */
+
+/* 1. Variables CSS y Tokens de Diseño Synth */
+:root {
+  /* Paleta Analógica Principal */
+  --synth-bg-canvas: #FAF7F2;          /* Fondo base marfil / chasis de laboratorio */
+  --synth-bg-surface: #FFFFFF;         /* Superficie de tarjetas y módulos */
+  --synth-bg-panel: #F3EFEA;           /* Paneles de control y contenedores */
+  --synth-bg-display: #121516;         /* Fondo oscuro para display LCD/frecuencímetro */
+  
+  /* Acentos Rojos Audaces */
+  --synth-red-primary: #D32F2F;        /* Rojo audaz principal */
+  --synth-red-dark: #B71C1C;           /* Rojo oscuro para hover/active */
+  --synth-red-subtle: #FFEBEE;         /* Fondo suave de destaque */
+  --synth-red-glow: rgba(211, 47, 47, 0.25);
+
+  /* Acentos de Señal y Medición */
+  --synth-led-green: #00E676;          /* LED indicador de señal activa */
+  --synth-led-amber: #FFB300;          /* LED indicador de espera */
+  
+  /* Tipografía y Textos */
+  --synth-text-main: #1C1917;          /* Carbón oscuro de alto contraste */
+  --synth-text-muted: #57534E;         /* Gris de serigrafía secundaria */
+  --synth-text-display: #FF5252;       /* Dígitos luminiscentes en display */
+  
+  /* Bordes Mecánicos */
+  --synth-border-bold: 2px solid var(--synth-red-primary);
+  --synth-border-dark: 2px solid #1C1917;
+  --synth-border-subtle: 1px solid #E7E0D6;
+  
+  /* Sombras Duras Estilo Consola Analógica */
+  --synth-shadow-hard: 3px 3px 0px #1C1917;
+  --synth-shadow-red: 3px 3px 0px var(--synth-red-primary);
+  --synth-shadow-active: 1px 1px 0px #1C1917;
+  --synth-shadow-inset: inset 2px 2px 4px rgba(0, 0, 0, 0.12);
+
+  /* Tipografías */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+
+  /* Espaciados y Radio */
+  --radius-panel: 4px;                 /* Bordes levemente redondeados pero duros */
+  --radius-sm: 2px;
+}
+
+/* 2. Reset y Configuración Global */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100vh;
+  background-color: var(--synth-bg-canvas);
+  color: var(--synth-text-main);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3. Tipografía Específica */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: var(--synth-text-main);
+  letter-spacing: -0.02em;
+}
+
+/* Clases utilitarias para lecturas de frecuencias y medidores Hz */
+.synth-hz-readout,
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+/* 4. Clases y Componentes Base Synth */
+
+/* Contenedor o Chasis de Panel */
+.synth-panel {
+  background-color: var(--synth-bg-surface);
+  border: var(--synth-border-dark);
+  box-shadow: var(--synth-shadow-hard);
+  border-radius: var(--radius-panel);
+  padding: 1.25rem;
+  position: relative;
+}
+
+/* Variante de Panel con marco rojo de advertencia o calibración */
+.synth-panel-accent {
+  background-color: var(--synth-bg-surface);
+  border: var(--synth-border-bold);
+  box-shadow: var(--synth-shadow-red);
+  border-radius: var(--radius-panel);
+  padding: 1.25rem;
+}
+
+/* Botón Analógico Rojo Primario */
+.synth-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: var(--synth-red-primary);
+  color: #FFFFFF;
+  border: var(--synth-border-dark);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--synth-shadow-hard);
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease;
+  user-select: none;
+}
+
+.synth-btn:hover {
+  background-color: var(--synth-red-dark);
+}
+
+.synth-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--synth-shadow-active);
+}
+
+.synth-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--synth-shadow-hard);
+}
+
+/* Botón Secundario (Marfil con acento rojo) */
+.synth-btn-secondary {
+  background-color: var(--synth-bg-surface);
+  color: var(--synth-red-primary);
+  border: var(--synth-border-bold);
+  box-shadow: var(--synth-shadow-red);
+}
+
+.synth-btn-secondary:hover {
+  background-color: var(--synth-red-subtle);
+  color: var(--synth-red-dark);
+}
+
+/* Display Digital / Medidor de Frecuencia Vintage */
+.synth-display {
+  background-color: var(--synth-bg-display);
+  color: var(--synth-text-display);
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid #333333;
+  box-shadow: var(--synth-shadow-inset);
+  text-align: right;
+  letter-spacing: 0.08em;
+}
+
+/* Badge de Etiqueta o Tag de Frecuencia */
+.synth-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: var(--synth-red-subtle);
+  color: var(--synth-red-dark);
+  border: 1px solid var(--synth-red-primary);
+  border-radius: var(--radius-sm);
+}
+
+/* Inputs y Selects Estilo Consola */
+.synth-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
+  font-family: var(--font-sans);
+  background-color: #FFFFFF;
+  color: var(--synth-text-main);
+  border: 2px solid #1C1917;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.synth-input:focus {
+  border-color: var(--synth-red-primary);
+  box-shadow: 0 0 0 3px var(--synth-red-glow);
+}
+
+.synth-input-mono {
+  font-family: var(--font-mono);
+}

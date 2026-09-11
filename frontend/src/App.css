@@ -1,0 +1,92 @@
+/* Estructura del panel de consola y layout principal */
+.synth-container {
+  max-width: 900px;
+  margin: 2.5rem auto;
+  padding: 0 1.25rem;
+  width: 100%;
+}
+
+/* Cabecera estilo carátula de sintetizador analógico */
+.synth-header {
+  border-bottom: 3px solid var(--synth-red-primary);
+  padding-bottom: 1.25rem;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.synth-title {
+  font-size: 1.875rem;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: var(--synth-text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.synth-title-dot {
+  width: 14px;
+  height: 14px;
+  background-color: var(--synth-red-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--synth-red-glow);
+  display: inline-block;
+}
+
+.synth-subtitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--synth-red-dark);
+  letter-spacing: 0.08em;
+}
+
+/* Grilla de módulos / racks */
+.synth-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .synth-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.synth-module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #E5E0D8;
+  padding-bottom: 0.5rem;
+}
+
+.synth-module-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--synth-red-primary);
+}
+
+.synth-sample-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.synth-sample-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: #FAF7F2;
+  border: 1px solid #E0DAD0;
+  border-radius: var(--radius-sm);
+}
