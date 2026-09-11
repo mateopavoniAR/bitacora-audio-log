@@ -3,7 +3,7 @@
  * Basado en las especificaciones de .ai/context/API_CONTRACT.md.
  */
 
-import type { NotaAudio, CreateNotaAudioDto, HealthStatus } from '../types/notaAudio'
+import type { NotaAudio, CreateNotaAudioDto, UpdateNotaAudioDto, HealthStatus } from '../types/notaAudio'
 
 // URL base del backend configurada por variable de entorno con fallback al puerto de Docker
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
@@ -56,6 +56,28 @@ export async function getNotas(): Promise<NotaAudio[]> {
 export async function createNota(dto: CreateNotaAudioDto): Promise<NotaAudio> {
   const response = await fetch(`${BASE_URL}/api/notasaudio`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(dto),
+  })
+
+  if (!response.ok) {
+    const detalle = await procesarError(response)
+    throw new Error(detalle)
+  }
+
+  return response.json()
+}
+
+/**
+ * Actualiza el título, etiqueta y frecuencia de una nota existente.
+ * PUT /api/notasaudio/{id}
+ */
+export async function updateNota(id: number, dto: UpdateNotaAudioDto): Promise<NotaAudio> {
+  const response = await fetch(`${BASE_URL}/api/notasaudio/${id}`, {
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',

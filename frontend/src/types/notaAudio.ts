@@ -18,6 +18,8 @@ export interface NotaAudio {
   frecuenciaHz: number;
   /** Marca de tiempo de registro en formato ISO 8601 UTC */
   fechaCreacion: string;
+  /** Marca de tiempo de última modificación en formato ISO 8601 UTC (solo si fue editada) */
+  fechaModificacion?: string;
 }
 
 /**
@@ -32,6 +34,18 @@ export interface CreateNotaAudioDto {
   frecuenciaHz: number;
   /** Fecha opcional en formato ISO 8601 UTC. Si se omite, el servidor asigna UTC actual */
   fechaCreacion?: string;
+}
+
+/**
+ * Payload para la actualización de una nota existente en PUT /api/notasaudio/{id}.
+ */
+export interface UpdateNotaAudioDto {
+  /** Título obligatorio (no vacío, máx 200 caracteres) */
+  titulo: string;
+  /** Etiqueta opcional (máx 100 caracteres) */
+  etiqueta?: string;
+  /** Frecuencia obligatoria en Hertz (valor > 0, rango 0.01 a 200000.0) */
+  frecuenciaHz: number;
 }
 
 /**
