@@ -72,5 +72,6 @@ export interface ApiErrorMessage {
  */
 export interface HealthStatus {
   status: 'Healthy' | 'Unhealthy' | string;
+  environment: string;
   timestamp: string;
 }

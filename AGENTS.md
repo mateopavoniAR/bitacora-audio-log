@@ -52,7 +52,7 @@ docker run -p 80:80 bitacora-frontend:latest
 4. **Formato de Respuestas de Error:** Coexisten dos formatos:
    - Errores de validación de modelo (`400 Bad Request`): Devuelven `ValidationProblemDetails` RFC 7807/9110 con diccionario de `errors`.
    - Errores de negocio/controlador (`404 Not Found` o `400 manual`): Devuelven `{ "mensaje": "..." }`.
-5. **CORS:** Política activa `"AllowAll"` (permite cualquier origen, método y encabezado).
+5. **CORS:** Política activa `"DynamicOrigins"`. Sin `ALLOWED_ORIGINS` se permite cualquier origen, método y encabezado (desarrollo local). Con `ALLOWED_ORIGINS` (separada por comas) se permiten los orígenes listados más `http://localhost:*` y `https://*.vercel.app`.
 6. **No Modificar Código de Aplicación Sin Plan:** Todo cambio debe estar fundamentado en las especificaciones de `.ai/context/`.
 
 ## Para Más Contexto

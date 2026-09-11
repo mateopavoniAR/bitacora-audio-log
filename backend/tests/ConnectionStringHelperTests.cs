@@ -1,9 +1,10 @@
+﻿using System.Text.RegularExpressions;
 using BitacoraAudio.Api.Data;
 using Xunit;
 
 namespace BitacoraAudio.Tests;
 
-// Pruebas unitarias para validar la resolución de DATABASE_URL en formato URI y ADO.NET
+// Pruebas unitarias para validar la resoluciÃ³n de DATABASE_URL en formato URI y ADO.NET
 public class ConnectionStringHelperTests
 {
     [Fact]
@@ -66,5 +67,61 @@ public class ConnectionStringHelperTests
         // Assert
         Assert.Equal(fallback, resultNull);
         Assert.Equal(fallback, resultEmpty);
+    }
+
+    [Fact]
+    public void ResolveConnectionString_WithUriAndRequireSsl_ShouldUseRequire()
+    {
+        // Arrange
+        var uri = "postgres://user:pass@db.example.com:5432/bitacora_prod";
+
+        // Act
+        var result = ConnectionStringHelper.ResolveConnectionString(uri, requireSsl: true);
+
+        // Assert
+        Assert.Contains("SSL Mode=Require", result);
+        Assert.Contains("Trust Server Certificate=true", result);
+    }
+
+    [Fact]
+    public void ResolveConnectionString_WithUriLocalhostAndRequireSsl_ShouldUsePrefer()
+    {
+        // Arrange
+        var uri = "postgres://user:pass@localhost:5432/bitacora_dev";
+
+        // Act
+        var result = ConnectionStringHelper.ResolveConnectionString(uri, requireSsl: true);
+
+        // Assert
+        Assert.Contains("SSL Mode=Prefer", result);
+        Assert.DoesNotMatch(new Regex("SSL Mode=Require"), result);
+    }
+
+    [Fact]
+    public void ResolveConnectionString_WithAdoNetAndRequireSsl_ShouldAppendRequire()
+    {
+        // Arrange
+        var connStr = "Host=db.example.com;Port=5432;Database=bitacora_prod;Username=user;Password=pass";
+
+        // Act
+        var result = ConnectionStringHelper.ResolveConnectionString(connStr, requireSsl: true);
+
+        // Assert
+        Assert.Contains("SSL Mode=Require", result);
+        Assert.Contains("Trust Server Certificate=true", result);
+    }
+
+    [Fact]
+    public void ResolveConnectionString_WithAdoNetLocalhostAndRequireSsl_ShouldAppendPrefer()
+    {
+        // Arrange
+        var connStr = "Host=localhost;Port=5432;Database=bitacora_dev;Username=postgres;Password=pass";
+
+        // Act
+        var result = ConnectionStringHelper.ResolveConnectionString(connStr, requireSsl: true);
+
+        // Assert
+        Assert.Contains("SSL Mode=Prefer", result);
+        Assert.DoesNotMatch(new Regex("SSL Mode=Require"), result);
     }
 }

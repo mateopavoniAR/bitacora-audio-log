@@ -63,7 +63,9 @@
   - *Migración EF:* La migración `AddFechaModificacion` existe como documentación evolutiva del esquema, pero no se aplica vía `Database.Migrate()`.
 
 ### 2.4 Infraestructura y Orquestación Local
-- **`[UNKNOWN]` Creación del `docker-compose.yml` en la raíz:**
-  - *Pendiente:* Generar la orquestación que vincule los tres servicios (PostgreSQL + Backend .NET en puerto 8080 + Frontend Nginx en puerto 80).
+- **`[RESUELTO]` Creación del `docker-compose.yml` en la raíz:**
+  - *Resolución:* Orquestación implementada (`db` PostgreSQL 16 + `backend` .NET en puerto 8080 + `frontend` Nginx en puerto 80).
+- **`[RESUELTO]` Preparación de código multientorno (Testing & Producción):**
+  - *Resolución:* El backend lee `DATABASE_URL` (URI o ADO.NET, con `SSL Mode=Require` fuera de Development salvo hosts locales), aplica CORS dinámico según `ALLOWED_ORIGINS` y expone `/health` con `status`, `environment` y `timestamp`. El frontend usa `import.meta.env.VITE_API_URL` con fallback a `http://localhost:8080` y `frontend/vercel.json` resuelve el ruteo SPA en Vercel. Ver [docs/DEPLOYMENT_ENVIRONMENTS.md](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/docs/DEPLOYMENT_ENVIRONMENTS.md).
 - **`[UNKNOWN]` Pipelines de CI/CD para GitHub Actions:**
-  - *Pendiente:* Configurar los workflows automatizados para testeo y despliegue continuo hacia las ramas `homologacion` y `produccion`.
+  - *Pendiente:* Configurar los workflows automatizados para testeo y despliegue continuo hacia las ramas `main` (producción) y `desarrollo` (testing).

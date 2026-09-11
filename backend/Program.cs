@@ -16,12 +16,21 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// 2. Configuración de Política CORS 'AllowAll'
+// 2. Configuración de Política CORS dinámica según entorno
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("DynamicOrigins", policy =>
     {
-        policy.AllowAnyOrigin()
+        var allowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS");
+        if (string.IsNullOrWhiteSpace(allowedOrigins) || allowedOrigins.Trim() == "*")
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+            return;
+        }
+
+        policy.SetIsOriginAllowed(CorsOriginHelper.IsAllowed)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -30,7 +39,8 @@ builder.Services.AddCors(options =>
 // 3. Resolución de la cadena de conexión desde la variable de entorno DATABASE_URL
 var rawDatabaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 var fallbackConnection = builder.Configuration.GetConnectionString("DefaultConnection");
-var connectionString = ConnectionStringHelper.ResolveConnectionString(rawDatabaseUrl, fallbackConnection);
+var requireSsl = !builder.Environment.IsDevelopment();
+var connectionString = ConnectionStringHelper.ResolveConnectionString(rawDatabaseUrl, fallbackConnection, requireSsl);
 
 // Configuración de Entity Framework Core con Npgsql (PostgreSQL)
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -77,13 +87,18 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction() || app.Env
     });
 }
 
-// Aplicar política CORS requerida 'AllowAll'
-app.UseCors("AllowAll");
+// Aplicar política CORS dinámica según entorno
+app.UseCors("DynamicOrigins");
 
 app.UseAuthorization();
 
-// Endpoint de Health Check
-app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }));
+// Endpoint de Health Check con estado, entorno y marca de tiempo
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "Healthy",
+    environment = app.Environment.EnvironmentName,
+    timestamp = DateTime.UtcNow
+}));
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.MapControllers();

@@ -128,23 +128,30 @@ Definida en `BitacoraAudio.Api.Models.NotaAudio`:
 
 ## 6. Configuración de CORS
 
-- **Política Actual: `"AllowAll"` `[FACT]`:**
-  Implementada en `Program.cs` (líneas 20-28 y 79):
+- **Política Actual: `"DynamicOrigins"` `[FACT]`:**
+  Implementada en `Program.cs` (bloque `AddCors` y `app.UseCors("DynamicOrigins")`):
   ```csharp
   builder.Services.AddCors(options =>
   {
-      options.AddPolicy("AllowAll", policy =>
+      options.AddPolicy("DynamicOrigins", policy =>
       {
-          policy.AllowAnyOrigin()
+          var allowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS");
+          if (string.IsNullOrWhiteSpace(allowedOrigins) || allowedOrigins.Trim() == "*")
+          {
+              policy.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+              return;
+          }
+          policy.SetIsOriginAllowed(CorsOriginHelper.IsAllowed)
                 .AllowAnyMethod()
                 .AllowAnyHeader();
       });
   });
-  ...
-  app.UseCors("AllowAll");
   ```
-- **Compatibilidad con Frontend `[FACT]`:**
-  La política actual ya autoriza peticiones cross-origin desde cualquier puerto u origen (por ejemplo, `http://localhost:5173` de Vite o URLs de producción). No provocará bloqueos de CORS para llamadas estándar sin cookies.
+- **Comportamiento por entorno `[FACT]`:**
+  - Sin `ALLOWED_ORIGINS` (o `*`): se permite cualquier origen (comportamiento del Docker local).
+  - Con `ALLOWED_ORIGINS` (por comas): se permiten los orígenes listados más `http://localhost:*` y los subdominios `https://*.vercel.app` (incluidos previews de Vercel). La lógica de patrones vive en `backend/Data/CorsOriginHelper.cs`.
 
 ---
 

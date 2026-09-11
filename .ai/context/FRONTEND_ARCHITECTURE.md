@@ -68,6 +68,7 @@
 ## 3. Módulos y Flujos de Datos
 
 ### 3.1 Cliente de API (`src/services/api.ts`)
+- **Base URL dinámica `[FACT]`:** `import.meta.env.VITE_API_URL` con fallback a `http://localhost:8080` (soporta Vercel en Testing/Producción sin recompilar código). El ruteo SPA en Vercel lo resuelve `frontend/vercel.json`.
 Implementa las siguientes operaciones asíncronas:
 - `getNotas(): Promise<NotaAudio[]>`: Consume `GET /api/notasaudio`.
 - `createNota(dto: CreateNotaAudioDto): Promise<NotaAudio>`: Consume `POST /api/notasaudio`.

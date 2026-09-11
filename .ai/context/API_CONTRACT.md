@@ -15,7 +15,7 @@
 | **Producción** | `[UNKNOWN]` | Pendiente de asignación de dominio cloud | `{BASE_URL}/swagger` |
 
 - **Especificación OpenAPI JSON:** `{BASE_URL}/swagger/v1/swagger.json` (habilitada en todos los entornos).
-- **CORS:** El backend aplica la política `"AllowAll"`. Permite cualquier origen (incluyendo `http://localhost:5173` de Vite), cualquier método HTTP y cualquier encabezado.
+- **CORS:** El backend aplica la política dinámica `"DynamicOrigins"` según `ALLOWED_ORIGINS` (por comas). Sin la variable se permite cualquier origen. Con la variable, se permiten los orígenes listados más `http://localhost:*` y `https://*.vercel.app`.
 
 ---
 
@@ -97,6 +97,7 @@ Verifica la disponibilidad básica del servicio.
   ```json
   {
     "status": "Healthy",
+    "environment": "Production",
     "timestamp": "2026-09-11T11:45:00.1234567Z"
   }
   ```
@@ -369,6 +370,7 @@ export interface ApiErrorMessage {
 // Estado del Healthcheck
 export interface HealthStatus {
   status: "Healthy" | "Unhealthy" | string;
+  environment: string;
   timestamp: string;
 }
 ```
