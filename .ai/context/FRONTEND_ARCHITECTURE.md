@@ -1,117 +1,101 @@
-# Arquitectura Propuesta para el Frontend React
+# Arquitectura Implementada del Frontend React
 
-> **ESTADO DE ESTE DOCUMENTO:** Todas las secciones aquí detalladas representan propuestas de diseño técnico catalogadas explícitamente como **`[DECISION]`**. Ninguna de estas decisiones es un hecho consumado ni debe considerarse definitiva hasta que el usuario las revise y apruebe explícitamente. No se debe escribir código de aplicación React hasta contar con dicha aprobación.
-
----
-
-## 1. Stack Base y Herramientas de Construcción
-
-- **`[DECISION]` Runtime y Bundler:** **Vite + React 18 / 19 + TypeScript**.
-  - *Justificación:* Vite ofrece recarga en caliente instantánea (HMR), configuración cero de TypeScript y compatibilidad óptima para aplicaciones SPA desacopladas en monorepos. Se ubicará en el directorio `/frontend` como establece `CONTEXT.md`.
-- **`[DECISION]` Integración con Web Audio API:**
-  - El cliente debe incorporar un generador de tonos y oscilador nativo (`AudioContext`, `OscillatorNode`, `GainNode`) que interprete los valores de `frecuenciaHz` recibidos de la API. Se diseñará un reproductor con controles de inicio, parada, volumen, forma de onda (sinusoidal, cuadrada, triangular, sierra) y feedback visual de la onda acústica.
+> **ESTADO DE ESTE DOCUMENTO: `[IMPLEMENTADO / CONGELADO]`**  
+> Las decisiones arquitectónicas preliminares han sido consolidadas y construidas durante las Fases 1, 2 y 3 del Frontend. Este documento refleja el estado técnico real y la estructura implementada en `/frontend`.
 
 ---
 
-## 2. Estructura de Carpetas Propuesta
+## 1. Stack Tecnológico Implementado `[FACT]`
 
-- **`[DECISION]` Organización Modular Basada en Características (Feature-Driven Architecture):**
-  Se propone estructurar `/frontend` separando la lógica de negocio por módulos funcionales (`features/`):
-
-  ```text
-  /frontend
-  ├── public/                      # Assets estáticos, favicons
-  ├── src/
-  │   ├── assets/                  # Íconos SVG, tipografías, sonidos base
-  │   ├── components/              # Componentes UI transversales y diseño atómico
-  │   │   ├── common/              # Button, Input, Modal, Toast, Badge, Spinner
-  │   │   └── layout/              # Header, Footer, Sidebar, PageContainer
-  │   ├── features/                # Módulos encapsulados por dominio
-  │   │   ├── notasaudio/          # Dominio: Bitácora y Notas de Audio
-  │   │   │   ├── api/             # Hooks de consulta y mutaciones HTTP
-  │   │   │   │   ├── useNotasAudio.ts        # GET /api/notasaudio
-  │   │   │   │   ├── useCreateNotaAudio.ts   # POST /api/notasaudio
-  │   │   │   │   └── useDeleteNotaAudio.ts   # DELETE /api/notasaudio/{id}
-  │   │   │   ├── components/      # UI del dominio
-  │   │   │   │   ├── NotaAudioCard.tsx       # Tarjeta de nota con acción de play/delete
-  │   │   │   │   ├── NotaAudioForm.tsx       # Formulario con validaciones en cliente
-  │   │   │   │   ├── NotaAudioList.tsx       # Grilla/lista cronológica
-  │   │   │   │   └── NotaAudioSearch.tsx     # Barra de filtrado local en memoria
-  │   │   │   └── types/           # Tipos de dominio local
-  │   │   └── audio-engine/        # Dominio: Motor de Síntesis Web Audio API
-  │   │       ├── hooks/
-  │   │       │   └── useToneGenerator.ts     # Hook reactivo para disparar frecuencias
-  │   │       ├── services/
-  │   │       │   └── WebAudioManager.ts      # Singleton para AudioContext / GainNode
-  │   │       └── components/
-  │   │           ├── AudioVisualizer.tsx     # Canvas con osciloscopio o visualizador de onda
-  │   │           └── FrequencyDial.tsx       # Selector visual interactivo de Hz
-  │   ├── lib/                     # Clientes de terceros y utilitarios
-  │   │   ├── apiClient.ts         # Wrapper de Fetch o Axios con manejo de errores
-  │   │   └── queryClient.ts       # Instancia configurada de TanStack Query
-  │   ├── types/                   # Tipos globales generados y contratos
-  │   │   ├── api.generated.ts     # Generado automáticamente desde Swagger OpenAPI
-  │   │   └── index.ts             # Re-export de tipos
-  │   ├── App.tsx                  # Componente raíz y orquestación de vistas
-  │   ├── main.tsx                 # Punto de entrada de React con Providers
-  │   └── index.css                # Sistema de diseño, tokens CSS y tema dark
-  ├── .env.development            # VITE_API_BASE_URL=http://localhost:8080
-  ├── package.json
-  ├── tsconfig.json
-  └── vite.config.ts
-  ```
+- **Runtime y Empaquetador:** **React 19 + Vite 8 + TypeScript** en `/frontend`.
+  - Compilación optimizada mediante `tsc -b && vite build`.
+  - Tipado estricto habilitado con TypeScript.
+- **Consumo de API REST:** **Fetch API nativo tipado** centralizado en `/frontend/src/services/api.ts`.
+  - URL base dinámica leída desde `import.meta.env.VITE_API_URL` con fallback predeterminado a `http://localhost:8080`.
+  - Normalizador unificado de errores que soporta tanto el estándar RFC 7807 (`errors`) como mensajes personalizados de controladores (`mensaje`).
+- **Motor de Audio:** **Web Audio API nativa** en `/frontend/src/utils/audioSynth.ts`.
+  - Uso de `AudioContext` (compatible con `webkitAudioContext`).
+  - Generación de ondas senoidales puras mediante `OscillatorNode` (`type = 'sine'`).
+  - Envolvente de volumen mediante `GainNode` (ataque rápido a 0.2 y decaimiento exponencial) para supresión de chasquidos acústicos (clics).
+- **Diseño y Estilos:** **Vanilla CSS con Design Tokens y Variables CSS** en `/frontend/src/index.css` y `App.css`.
+  - Estética retro de instrumentación y consolas analógicas:
+    - Chasis marfil cálido (`#FAF7F2`) y paneles blancos (`#FFFFFF`).
+    - Acentos y bordes en rojo audaz (`#D32F2F` / `#B71C1C`).
+    - Sombras analógicas mecánicas desplazadas (`3px 3px 0px #1C1917` / `#D32F2F`).
+    - Display digital vintage (`.synth-display`) y tipografía monoespaciada para Hz (`.synth-hz-readout`).
+- **Contenedorización y Servidor Web:** **Dockerfile multi-stage con Nginx en puerto 80**.
+  - Etapa 1 (`node:20-alpine`): Instalación de dependencias y compilación de producción.
+  - Etapa 2 (`nginx:alpine`): Servidor estático con configuración para Single Page Applications (`try_files $uri $uri/ /index.html;`) y caché de assets estáticos.
 
 ---
 
-## 3. Manejo de Estado y Data-Fetching
+## 2. Estructura Real de Carpetas y Módulos `[FACT]`
 
-- **`[DECISION]` Librería de Data-Fetching Recomendada:** **TanStack Query (React Query v5)** combinado con un wrapper liviano sobre `fetch` nativo.
-  - *Justificación en función del backend existente:*
-    1. **Naturaleza del Backend:** El backend es una API REST estándar con operaciones CRUD. No implementa WebSockets, GraphQL ni streaming.
-    2. **Caché e Invalidación Reactiva:** Tras invocar la mutación `POST /api/notasaudio` o `DELETE /api/notasaudio/{id}`, TanStack Query permite invalidar automáticamente la clave de consulta `['notasaudio']`, forzando una actualización transparente del listado sin recargar la página.
-    3. **Ausencia de Refresh Tokens:** Al no existir mecanismos complejos de refresh de tokens o interceptores de autenticación circular en el backend, no se justifica el peso de una arquitectura de Redux Toolkit con RTK Query.
-    4. **Manejo de Estados de Red:** Provee de forma declarativa `isLoading`, `isError`, `data` y reintentos en caso de indisponibilidad temporal.
-
-- **`[DECISION]` Manejo de Estado Local de UI y Audio:**
-  - Para el estado de la reproducción sonora (nota actualmente reproduciéndose, frecuencia activa en tiempo real, volumen maestro, estado de reproducción play/pause), se propone un store simple con **Zustand** o un **React Context con Custom Hook (`useAudioEngine`)**. Esto evita acoplar el estado de reproducción de audio con el estado de red de la API.
-
----
-
-## 4. Manejo de Sesión y Autenticación en el Cliente
-
-- **`[DECISION]` Estrategia Inicial Sin Autenticación (Modo Abierto):**
-  - Dado que la auditoría del backend confirmó con evidencia (`[FACT]`) que **no existe autenticación ni autorización en la API**, el frontend operará inicialmente sin pantallas de login, registro ni guardias de ruta (`ProtectedRoute`).
-- **`[DECISION]` Abstracción Preparada para Autenticación Futura:**
-  - Se configurará el cliente HTTP (`apiClient.ts`) con una función extractora de tokens opcional:
-    ```typescript
-    // Inyección condicional y no bloqueante
-    const token = getAuthToken(); // Retorna null inicialmente
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
-    }
-    ```
-  - De este modo, si en una fase posterior el backend incorpora JWT o OAuth2, solo será necesario implementar la pantalla de login y guardar el token en el proveedor, sin tocar ninguna de las llamadas a los endpoints existentes.
-
----
-
-## 5. Estrategia de Tipado TypeScript y OpenAPI
-
-- **`[DECISION]` Tipado Automático a través de OpenAPI:**
-  - Dado que el backend expone la especificación OpenAPI en `/swagger/v1/swagger.json` en todos los entornos (`[FACT]`), se propone utilizar la herramienta **`openapi-typescript`**.
-  - *Comando propuesto en `package.json`:*
-    ```json
-    "scripts": {
-      "types:generate": "openapi-typescript http://localhost:8080/swagger/v1/swagger.json -o src/types/api.generated.ts"
-    }
-    ```
-- **`[DECISION]` Tipado Estático Fallback:**
-  - Para permitir el desarrollo frontend sin requerir que la base de datos PostgreSQL y la API .NET estén activas simultáneamente en la máquina del desarrollador, se mantendrán sincronizados los tipos declarados en [.ai/context/API_CONTRACT.md](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/.ai/context/API_CONTRACT.md) dentro de `src/types/index.ts`.
+```text
+/frontend
+├── public/                      # Favicons y recursos públicos
+│   ├── favicon.svg
+│   └── icons.svg
+├── src/
+│   ├── assets/                  # Logos y recursos gráficos
+│   ├── components/              # Componentes de la interfaz de usuario
+│   │   ├── NotaForm.tsx         # Formulario retro con validaciones en cliente y preview sonoro
+│   │   └── NotaList.tsx         # Listado en rack analógico con reproducción y eliminación
+│   ├── services/
+│   │   └── api.ts               # Cliente HTTP para endpoints /api/notasaudio y /health
+│   ├── types/
+│   │   └── notaAudio.ts         # Contratos de tipos derivados de API_CONTRACT.md
+│   ├── utils/
+│   │   └── audioSynth.ts        # Helper de síntesis acústica con Web Audio API
+│   ├── App.css                  # Estilos de layout y estructura de chasis analógico
+│   ├── App.tsx                  # Componente raíz con orquestación, estados y oscilador superior
+│   ├── index.css                # Variables CSS, reset, tipografía mono y componentes synth
+│   └── main.tsx                 # Entrada de React y montaje en el DOM
+├── .dockerignore                # Exclusiones de construcción para la imagen Docker
+├── Dockerfile                   # Construcción multi-stage (Node 20 + Nginx Alpine)
+├── index.html                   # HTML base de la aplicación
+├── nginx.conf                   # Configuración del servidor Nginx para SPA
+├── package.json                 # Dependencias y scripts de npm
+├── tsconfig.json                # Configuración global de TypeScript
+└── vite.config.ts               # Configuración del empaquetador Vite
+```
 
 ---
 
-## 6. Diseño Visual y Estilos
+## 3. Módulos y Flujos de Datos
 
-- **`[DECISION]` Estética de Laboratorio Acústico / Dark Mode:**
-  - Se propone una interfaz moderna con tema oscuro profundo (`#0f172a`, `#1e293b`), tipografía contemporánea (ej. `Inter` o `JetBrains Mono` para frecuencias), acentos en colores vibrantes (verde/cian/azul eléctrico para frecuencias activas) y un componente interactivo de visualización de ondas.
-- **`[DECISION]` Solución de Estilos:**
-  - Se propone el uso de **Vanilla CSS con variables/design tokens** o **TailwindCSS** (según preferencia del usuario), evitando librerías de componentes pesadas y genéricas que comprometan el rendimiento visual o limiten la personalización.
+### 3.1 Cliente de API (`src/services/api.ts`)
+Implementa las siguientes operaciones asíncronas:
+- `getNotas(): Promise<NotaAudio[]>`: Consume `GET /api/notasaudio`.
+- `createNota(dto: CreateNotaAudioDto): Promise<NotaAudio>`: Consume `POST /api/notasaudio`.
+- `deleteNota(id: number): Promise<void>`: Consume `DELETE /api/notasaudio/{id}`.
+- `getHealth(): Promise<HealthStatus>`: Consume `GET /health`.
+
+### 3.2 Sintetizador Acústico (`src/utils/audioSynth.ts`)
+- `reproducirTono(frecuenciaHz: number, duracionSegundos: number = 1.2): void`
+- Controla el ciclo de vida del `AudioContext`, reanudando el contexto si se encuentra en estado suspendido por políticas de interacción del navegador.
+
+### 3.3 Componentes Principales
+1. **`NotaForm.tsx`:**
+   - Controla campos de `titulo` (requerido, máx 200), `etiqueta` (opcional, máx 100) y `frecuenciaHz` (requerido, > 0 Hz).
+   - Incluye botón de prueba acústica en tiempo real antes del guardado.
+   - Comunica la creación al componente padre vía callback `onNotaRegistrada`.
+2. **`NotaList.tsx`:**
+   - Visualiza registros con títulos, etiquetas y lecturas de Hz en pantalla oscura digital.
+   - Incorpora botón para reproducir el tono de cada nota individualmente.
+   - Permite eliminar registros con confirmación nativa `window.confirm`.
+3. **`App.tsx`:**
+   - Chasis unificado de la consola.
+   - Consulta inicial mediante `useEffect` al montar la aplicación.
+   - Manejo reactivo de adición y eliminación de notas.
+   - Módulo superior de oscilador con display de frecuencia activa y botones de acceso rápido a frecuencias estándar (60 Hz, 440 Hz, 1 kHz, 5 kHz).
+
+---
+
+## 4. Estrategia de Entornos y Despliegue
+
+| Entorno | URL Base Backend Predeterminada | Método de Inyección |
+| :--- | :--- | :--- |
+| **Desarrollo Local (Vite)** | `http://localhost:8080` (fallback) | Variable `VITE_API_URL` en `.env` o fallback en código |
+| **Contenedor Docker (Nginx)** | Configurable en build/run | `VITE_API_URL` en tiempo de compilación o reverse proxy |
+| **Producción / Staging** | Dominio cloud | Inyección en pipeline de CI/CD |
