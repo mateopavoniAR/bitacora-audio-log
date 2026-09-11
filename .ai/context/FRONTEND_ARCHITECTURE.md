@@ -68,14 +68,15 @@
 ## 3. Módulos y Flujos de Datos
 
 ### 3.1 Cliente de API (`src/services/api.ts`)
-- **Base URL dinámica `[FACT]`:** `import.meta.env.VITE_API_URL` con fallback a `http://localhost:8080` (soporta Vercel en Testing/Producción sin recompilar código). El ruteo SPA en Vercel lo resuelve `frontend/vercel.json`.
+- **Base URL dinámica `[FACT]`:** `frontend/src/services/api.ts` exporta `API_BASE_URL` (`import.meta.env.VITE_API_URL` con fallback a `http://localhost:8080`), usado por las peticiones y por el banner de error de `App.tsx` (soporta Vercel en Testing/Producción sin recompilar código).
+- **Ruteo SPA `[FACT]`:** `frontend/vercel.json` define los `rewrites` a `index.html` y, vía `ignoreCommand`, restringe los builds de Vercel únicamente a las ramas `homologacion` (preview) y `produccion` (production); `desarrollo` y demás ramas no generan despliegues.
 Implementa las siguientes operaciones asíncronas:
 - `getNotas(): Promise<NotaAudio[]>`: Consume `GET /api/notasaudio`.
 - `createNota(dto: CreateNotaAudioDto): Promise<NotaAudio>`: Consume `POST /api/notasaudio`.
 - `updateNota(id: number, dto: UpdateNotaAudioDto): Promise<NotaAudio>`: Consume `PUT /api/notasaudio/{id}` (asigna `fechaModificacion` en servidor).
 - `deleteNota(id: number): Promise<void>`: Consume `DELETE /api/notasaudio/{id}`.
-- `getHealth(): Promise<HealthStatus>`: Consume `GET /health`.
-- **Sanitización de errores `[FACT]`:** `procesarError` transforma cualquier `500` en `"Ocurrió un error interno en el servidor. Intente nuevamente más tarde."` y las respuestas no-JSON en un mensaje genérico con código. El helper `mensajeErrorRed` traduce fallos de red (`Failed to fetch`) a `"No se pudo establecer conexión con el servidor backend."`. Ningún detalle interno (stack traces, statusText, SQL) llega al usuario.
+- `getHealth(): Promise<HealthStatus>`: Consume `GET /health`; `HealthStatus` incluye `status`, `environment` y `timestamp`.
+- **Sanitización de errores `[FACT]`:** `solicitar<T>()` normaliza todas las respuestas: transforma cualquier `500` en `"Ocurrió un error interno en el servidor. Intente nuevamente más tarde."`; un `2xx` sin cuerpo JSON válido (`leerJson()` falla) en `"El servidor devolvió una respuesta inesperada. Intente nuevamente más tarde."`; y el filtro `ES_TECNICO` (`Unexpected token`, `<!doctype`, `not valid JSON`, `SyntaxError`) convierte esos casos en fallo de conexión. `mensajeErrorRed` traduce fallos de red (`Failed to fetch`) a `"No se pudo establecer conexión con el servidor backend."`. Ningún detalle interno (stack traces, statusText, SQL) llega al usuario.
 
 ### 3.2 Sintetizador Acústico (`src/utils/audioSynth.ts`)
 - `reproducirTono(frecuenciaHz: number, duracionSegundos: number = 1.2): void`

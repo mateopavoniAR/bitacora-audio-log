@@ -63,3 +63,4 @@ Según la tarea a realizar, consultá primero el documento correspondiente en `.
 - **Para revisar normas de código, nombrado y Git:** leé [.ai/context/CONVENTIONS.md](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/.ai/context/CONVENTIONS.md).
 - **Para entender el negocio, actores y alcance:** leé [.ai/context/PROJECT.md](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/.ai/context/PROJECT.md).
 - **Para revisar dudas pendientes sobre backend y DevOps:** leé [.ai/context/OPEN_QUESTIONS.md](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/.ai/context/OPEN_QUESTIONS.md).
+- **Para ver URLs de despliegue en la nube (Vercel/Render/Neon) y config de entorno:** leé [README.md](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/README.md) y [docs/DEPLOYMENT_ENVIRONMENTS.md](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/docs/DEPLOYMENT_ENVIRONMENTS.md).

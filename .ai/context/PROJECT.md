@@ -39,6 +39,6 @@ El proyecto resuelve la necesidad de registrar sesiones de prueba de audio, prue
 ## 5. Estrategia de Ramas y Entornos
 Según `CONTEXT.md` del repositorio:
 - **`desarrollo`:** Rama activa por defecto para el trabajo diario local orquestado con Docker Compose. `[FACT: git branch, CONTEXT.md]`
-- **`homologacion`:** Entorno de QA / staging en la nube con despliegue automático tras ejecución exitosa de pruebas. `[ASSUMPTION: documentado en CONTEXT.md, pero sin workflows de GitHub Actions implementados en el repo actual]`
-- **`produccion`:** Entorno productivo con actualización exclusiva mediante Pull Request aprobado. `[ASSUMPTION: documentado en CONTEXT.md, pero sin infraestructura de despliegue en código]`
+- **`homologacion`:** Entorno de QA / staging en la nube con despliegue automático tras ejecución exitosa de pruebas. `[FACT: frontend/vercel.json + docs/DEPLOYMENT_ENVIRONMENTS.md; ASSUMPTION: sin workflows de GitHub Actions implementados en el repo actual]`
+- **`produccion`:** Entorno productivo con actualización exclusiva mediante Pull Request aprobado. `[FACT: infraestructura de despliegue en código — DATABASE_URL + CORS dinámico + /health (backend); VITE_API_URL + vercel.json (frontend); docs/DEPLOYMENT_ENVIRONMENTS.md]`
 - **Aislamiento de Datos:** Cada entorno debe disponer de su propia instancia de base de datos PostgreSQL. `[FACT: CONTEXT.md]`

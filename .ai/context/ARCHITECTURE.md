@@ -61,7 +61,7 @@ Este documento describe la arquitectura real, patrones y componentes del backend
   - Los endpoints de lectura (`GET /api/notasaudio` y `GET /api/notasaudio/{id}`) retornan directamente la entidad de dominio `NotaAudio` sin mediar un `ReadNotaAudioDto`.
   - `PUT` devuelve la entidad actualizada con ambas marcas de tiempo (`FechaCreacion` y `FechaModificacion`).
 - **Minimal API vs. Controller Base `[FACT]`:**
-  - Minimal APIs se utilizan para utilidades de infraestructura: `GET /health` y `GET /` (redirección a `/swagger`).
+  - Minimal APIs se utilizan para utilidades de infraestructura: `GET /health` (responde `{ status, environment, timestamp }`) y `GET /` (redirección a `/swagger`).
   - Controllers clásicos (`ControllerBase` con atributos `[ApiController]` y `[Route]`) se utilizan para los endpoints de negocio en `NotasAudioController`.
 
 ---
@@ -92,7 +92,8 @@ Definida en `BitacoraAudio.Api.Models.NotaAudio`:
 
 ### 4.2 Helper de Conexión: `ConnectionStringHelper` `[FACT]`
 - Soporta formato URI estándar (`postgres://usuario:password@host:puerto/database` o `postgresql://...`).
-- Convierte automáticamente dicho formato al formato ADO.NET requerido por Npgsql (`Host=...;Port=...;Database=...;Username=...;Password=...;SSL Mode=Prefer;Trust Server Certificate=true;`).
+- Convierte automáticamente dicho formato al formato ADO.NET requerido por Npgsql (`Host=...;Port=...;Database=...;Username=...;Password=...;SSL Mode=...;Trust Server Certificate=true;`).
+- **SSL dinámico `[FACT]`:** `Program.cs` pasa `requireSsl = !builder.Environment.IsDevelopment()`; fuera de Development (y con host remoto) `ConnectionStringHelper.EnsureSslMode` fuerza `SSL Mode=Require` (TLS obligatorio, requerido por Neon), mientras que en Development o hosts locales (`localhost`/`127.0.0.1`) usa `Prefer` y no exige certificado.
 - Si la variable `DATABASE_URL` no está definida, toma como fallback la cadena `ConnectionStrings:DefaultConnection` de `appsettings.json`.
 
 ---

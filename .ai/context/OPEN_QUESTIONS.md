@@ -68,4 +68,4 @@
 - **`[RESUELTO]` Preparación de código multientorno (Testing & Producción):**
   - *Resolución:* El backend lee `DATABASE_URL` (URI o ADO.NET, con `SSL Mode=Require` fuera de Development salvo hosts locales), aplica CORS dinámico según `ALLOWED_ORIGINS` y expone `/health` con `status`, `environment` y `timestamp`. El frontend usa `import.meta.env.VITE_API_URL` con fallback a `http://localhost:8080` y `frontend/vercel.json` resuelve el ruteo SPA en Vercel. Ver [docs/DEPLOYMENT_ENVIRONMENTS.md](file:///c:/Users/Usuario/Desktop/Ejercicio_AR/docs/DEPLOYMENT_ENVIRONMENTS.md).
 - **`[UNKNOWN]` Pipelines de CI/CD para GitHub Actions:**
-  - *Pendiente:* Configurar los workflows automatizados para testeo y despliegue continuo hacia las ramas `main` (producción) y `desarrollo` (testing).
+  - *Pendiente:* Configurar los workflows automatizados para testeo y despliegue continuo hacia las ramas `produccion` (producción) y `homologacion` (testing). A nivel de Vercel, `frontend/vercel.json` ya restringe los builds a esas dos ramas (`ignoreCommand`); en Render los despliegues son servicios conectados al repo.

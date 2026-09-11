@@ -70,7 +70,7 @@ Generado ante excepciones no controladas de la base de datos o runtime:
 ### Caso D: Fallo de Red / Backend Caído
 Generado cuando la petición no alcanza al backend (proceso detenido, puerto cerrado, DNS):
 - El error nativo del navegador (`Failed to fetch`) se traduce en el cliente a: *"No se pudo establecer conexión con el servidor backend."*
-- **Directiva `[FACT]`:** Está prohibido exponer al usuario texto crudo de errores (códigos HTTP con statusText en inglés, stack traces, SQL). Todos los errores pasan por la normalización del cliente (`procesarError` + `mensajeErrorRed` en `frontend/src/services/api.ts`).
+- **Directiva `[FACT]`:** Está prohibido exponer al usuario texto crudo de errores (códigos HTTP con statusText en inglés, stack traces, SQL). Todos los errores pasan por la normalización del cliente (`solicitar<T>()` → `leerJson()` + `mensajeErrorRed` en `frontend/src/services/api.ts`). Una respuesta `2xx` sin cuerpo JSON válido (por ejemplo el `text/html` del ruteo SPA) se traduce a *"El servidor devolvió una respuesta inesperada. Intente nuevamente más tarde."*; los errores técnicos (`Unexpected token`, `<!doctype`, `not valid JSON`, `SyntaxError`) se enmascaran como fallo de conexión.
 
 ---
 

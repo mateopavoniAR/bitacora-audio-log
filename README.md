@@ -6,7 +6,7 @@ Construido con estética retro analógica de consola (rojo/marfil), arquitectura
 
 ---
 
-## 🚀 Desplegado en la Nube (Vercel + Render + Neon)
+## Desplegado en la Nube (Vercel + Render + Neon)
 
 El proyecto está publicado en tres servicios gratuitos, sin modificar el código entre entornos:
 
@@ -22,7 +22,7 @@ El proyecto está publicado en tres servicios gratuitos, sin modificar el códig
 
 ---
 
-## 🧱 Stack Tecnológico
+## Stack Tecnológico
 
 - **Backend (.NET 8):** Web API REST, Entity Framework Core 8 con Npgsql (PostgreSQL), Swagger/OpenAPI, xUnit (tests unitarios).
 - **Frontend (React 19 + Vite):** TypeScript, Fetch API nativa, Web Audio API (`AudioContext`) para síntesis de tonos, estética retro analógica con variables CSS.
@@ -31,7 +31,7 @@ El proyecto está publicado en tres servicios gratuitos, sin modificar el códig
 
 ---
 
-## 🖥️ Ejecución Local (Docker Compose)
+## Ejecución Local (Docker Compose)
 
 ```bash
 docker compose up -d --build
@@ -53,7 +53,7 @@ cd frontend && npm install && npm run dev               # Vite en :5173
 
 ---
 
-## 📁 Estructura
+## Estructura
 
 ```
 backend/     API .NET 8 + Entity Framework Core + tests xUnit
@@ -65,7 +65,7 @@ docker-compose.yml
 
 ---
 
-## 🔗 Documentación
+## Documentación
 
 - Despliegue multientorno (Neon / Render / Vercel / Cron-Job): [`docs/DEPLOYMENT_ENVIRONMENTS.md`](docs/DEPLOYMENT_ENVIRONMENTS.md)
 - Contrato de API y DTOs: `.ai/context/API_CONTRACT.md`
