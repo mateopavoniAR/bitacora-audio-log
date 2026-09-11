@@ -8,8 +8,8 @@ Esta guía explica cómo desplegar la **Bitácora de Sesiones & Audio Log** en d
 
 | Entorno    | Rama Git | Frontend (Vercel) | Backend (Render)   | Base de Datos (Neon) |
 |------------|----------|-------------------|--------------------|----------------------|
-| **Testing** | `desarrollo` | Preview Domain    | `bitacora-api-test` | Database `bitacora_test` |
-| **Producción** | `main` | Production Domain | `bitacora-api-prod` | Database `bitacora_prod` |
+| **Testing** | `homologacion` | Preview Domain    | `bitacora-api-test` | Database `bitacora_test` |
+| **Producción** | `produccion` | Production Domain | `bitacora-api-prod` | Database `bitacora_prod` |
 
 El código es idéntico en ambos entornos. Lo único que cambia son las **variables de entorno**:
 
@@ -68,21 +68,21 @@ El backend ya soporta multientorno sin cambios de código:
 ### A. Entorno de Testing
 1. **New Web Service** → conectar el repositorio de GitHub.
 2. Configuración:
-   - **Branch:** `desarrollo`
+   - **Branch:** `homologacion`
    - **Name:** `bitacora-api-test`
    - **Environment:** .NET (`Docker`)
    - **Root Directory:** `backend` (si se usa Dockerfile) o configurar el build nativo.
    - **Build Command:** `dotnet publish -c Release`
 3. **Environment Variables:**
    - `DATABASE_URL` = connection string de `bitacora_test` (Neon).
-   - `ALLOWED_ORIGINS` = `https://bitacora-test.vercel.app,https://bitacora-test-git-main.vercel.app`
+   - `ALLOWED_ORIGINS` = `https://bitacora-test.vercel.app,https://bitacora-test-git-homologacion.vercel.app`
    - `ASPNETCORE_ENVIRONMENT` = `Production`
    - `ASPNETCORE_HTTP_PORTS` = `8080`
 4. Deploy y verificar: `https://bitacora-api-test.onrender.com/health`.
 
 ### B. Entorno de Producción
 Igual que Testing pero:
-   - **Branch:** `main`
+   - **Branch:** `produccion`
    - **Name:** `bitacora-api-prod`
    - `DATABASE_URL` = connection string de `bitacora_prod`.
    - `ALLOWED_ORIGINS` = el dominio de producción de Vercel.
@@ -98,13 +98,13 @@ Igual que Testing pero:
 1. **New Project** → importar el repositorio.
 2. Configuración:
    - **Root Directory:** `frontend`
-   - **Rama asociada al preview:** `desarrollo`
+   - **Rama asociada al preview:** `homologacion`
 3. **Environment Variables (del entorno de preview):**
    - `VITE_API_URL` = `https://bitacora-api-test.onrender.com`
 4. Vercel servirá una URL de vista previa tipo `https://<proyecto>-<hash>.vercel.app`.
 
 ### B. Entorno de Producción
-1. Configurar la **rama de producción** en `main`.
+1. Configurar la **rama de producción** en `produccion`.
 2. **Environment Variables (producción):**
    - `VITE_API_URL` = `https://bitacora-api-prod.onrender.com`
 3. Deploy y verificar el dominio de producción `https://<proyecto>.vercel.app`.
