@@ -1,0 +1,66 @@
+services:
+  # ============================================================================
+  # 1. Base de Datos Relacional (PostgreSQL 16)
+  # ============================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: bitacora_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bitacora_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bitacora_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ============================================================================
+  # 2. Backend API REST (.NET 8 Web API)
+  # ============================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bitacora_backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/bitacora_db
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ============================================================================
+  # 3. Frontend SPA (React + Vite con Nginx)
+  # ============================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8080
+    container_name: bitacora_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    depends_on:
+      - backend
+
+# ==============================================================================
+# Volúmenes Persistentes
+# ==============================================================================
+volumes:
+  postgres_data:
+    name: bitacora_postgres_data

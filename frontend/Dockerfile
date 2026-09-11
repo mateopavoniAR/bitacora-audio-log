@@ -17,6 +17,10 @@ RUN npm ci
 # Copiar el resto del código fuente del frontend
 COPY . .
 
+# Variables de entorno para la compilación de Vite
+ARG VITE_API_URL=http://localhost:8080
+ENV VITE_API_URL=$VITE_API_URL
+
 # Compilar la aplicación para producción (genera la carpeta /dist)
 RUN npm run build
 
