@@ -5,22 +5,20 @@ import { getNotas, deleteNota } from './services/api'
 import { reproducirTono } from './utils/audioSynth'
 import { NotaForm } from './components/NotaForm'
 import { NotaList } from './components/NotaList'
+import { AutoDismissAlert } from './components/AutoDismissAlert'
 
-/**
- * Componente principal de la consola de audio (Fase 3: Lista de Notas y UI Principal Synth).
- */
+interface Alerta {
+  mensaje: string
+  tipo: 'success' | 'error'
+}
+
 function App() {
-  // Colección de notas obtenidas desde la base de datos a través de la API
   const [notas, setNotas] = useState<NotaAudio[]>([])
-  
-  // Estados para controlar la carga y posibles errores de conexión
   const [cargando, setCargando] = useState<boolean>(true)
   const [errorServidor, setErrorServidor] = useState<string | null>(null)
-
-  // Frecuencia activa en el monitor de oscilador
   const [frecuenciaActiva, setFrecuenciaActiva] = useState<number>(440.0)
+  const [alerta, setAlerta] = useState<Alerta | null>(null)
 
-  // Función para obtener las notas desde el backend .NET
   const cargarNotas = useCallback(async () => {
     try {
       setCargando(true)
@@ -38,31 +36,34 @@ function App() {
     }
   }, [])
 
-  // Efecto inicial: cargar las notas al montar el componente
   useEffect(() => {
     cargarNotas()
   }, [cargarNotas])
 
-  // Recarga automática al crear una nueva nota desde NotaForm
   const handleNotaCreada = (nuevaNota: NotaAudio) => {
-    // Agregamos la nueva nota al inicio de la lista de manera reactiva
     setNotas((prev) => [nuevaNota, ...prev])
     setFrecuenciaActiva(nuevaNota.frecuenciaHz)
+    setAlerta({ mensaje: `Nota "${nuevaNota.titulo}" registrada con éxito.`, tipo: 'success' })
   }
 
-  // Eliminación de una nota comunicándose con DELETE /api/notasaudio/{id}
+  const handleNotaActualizada = (notaActualizada: NotaAudio) => {
+    setNotas((prev) => prev.map((n) => (n.id === notaActualizada.id ? notaActualizada : n)))
+    setFrecuenciaActiva(notaActualizada.frecuenciaHz)
+    setAlerta({ mensaje: `Nota "${notaActualizada.titulo}" actualizada con éxito.`, tipo: 'success' })
+  }
+
   const handleEliminarNota = async (id: number) => {
     try {
       await deleteNota(id)
-      // Filtramos la nota eliminada del estado local
       setNotas((prev) => prev.filter((nota) => nota.id !== id))
+      setAlerta({ mensaje: 'Nota eliminada correctamente.', tipo: 'success' })
     } catch (err: unknown) {
       const mensaje = err instanceof Error ? err.message : 'Error al intentar eliminar'
-      alert(`No se pudo eliminar la nota: ${mensaje}`)
+      setAlerta({ mensaje, tipo: 'error' })
+      throw err
     }
   }
 
-  // Reproducir un tono sonoro y actualizar la pantalla digital
   const dispararTono = (frecuenciaHz: number) => {
     setFrecuenciaActiva(frecuenciaHz)
     reproducirTono(frecuenciaHz, 1.2)
@@ -73,9 +74,7 @@ function App() {
       {/* 1. Cabecera estilo chasis de hardware analógico */}
       <header className="synth-header">
         <div>
-          <div className="synth-subtitle">Acoustic Calibration &amp; Session Console</div>
           <h1 className="synth-title">
-            <span className="synth-title-dot" aria-hidden="true"></span>
             Bitácora de Sesiones &amp; Audio Log
           </h1>
         </div>
@@ -92,6 +91,17 @@ function App() {
           <span className="synth-badge">VITE + .NET 8</span>
         </div>
       </header>
+
+      {/* Notificaciones temporales auto-dismiss */}
+      <div className="synth-alerts-container">
+        {alerta && (
+          <AutoDismissAlert
+            mensaje={alerta.mensaje}
+            tipo={alerta.tipo}
+            onDismiss={() => setAlerta(null)}
+          />
+        )}
+      </div>
 
       {/* Banner de advertencia si la API no responde */}
       {errorServidor && (
@@ -118,11 +128,9 @@ function App() {
       <section className="synth-panel-accent" style={{ marginBottom: '2rem' }}>
         <div className="synth-module-header">
           <span className="synth-module-title">Generador Acústico &amp; Frecuencímetro</span>
-          <span className="synth-badge">OSC-01 • SINE WAVE</span>
         </div>
 
         <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Display digital vintage */}
           <div>
             <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--synth-text-muted)', marginBottom: '0.25rem' }}>
               FRECUENCIA SINTETIZADA
@@ -132,7 +140,6 @@ function App() {
             </div>
           </div>
 
-          {/* Botón principal de reproducción */}
           <div>
             <button
               type="button"
@@ -145,38 +152,21 @@ function App() {
             </button>
           </div>
 
-          {/* Presets rápidos analógicos */}
           <div>
             <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--synth-text-muted)', marginBottom: '0.25rem' }}>
               CALIBRACIONES ESTÁNDAR
             </span>
-            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="synth-btn synth-btn-secondary"
-                onClick={() => dispararTono(60.0)}
-              >
+            <div className="synth-quick-tones">
+              <button type="button" className="synth-btn synth-btn-secondary" onClick={() => dispararTono(60.0)}>
                 60 Hz
               </button>
-              <button
-                type="button"
-                className="synth-btn synth-btn-secondary"
-                onClick={() => dispararTono(440.0)}
-              >
+              <button type="button" className="synth-btn synth-btn-secondary" onClick={() => dispararTono(440.0)}>
                 440 Hz (A4)
               </button>
-              <button
-                type="button"
-                className="synth-btn synth-btn-secondary"
-                onClick={() => dispararTono(1000.0)}
-              >
+              <button type="button" className="synth-btn synth-btn-secondary" onClick={() => dispararTono(1000.0)}>
                 1 kHz
               </button>
-              <button
-                type="button"
-                className="synth-btn synth-btn-secondary"
-                onClick={() => dispararTono(5000.0)}
-              >
+              <button type="button" className="synth-btn synth-btn-secondary" onClick={() => dispararTono(5000.0)}>
                 5 kHz
               </button>
             </div>
@@ -186,18 +176,17 @@ function App() {
 
       {/* 3. Grilla Principal: Formulario a la izquierda y Listado a la derecha */}
       <div className="synth-grid">
-        {/* Columna Izquierda: Formulario de Registro */}
         <div>
           <NotaForm onNotaRegistrada={handleNotaCreada} />
         </div>
 
-        {/* Columna Derecha: Listado de Notas Persistidas */}
         <div>
           <NotaList
             notas={notas}
             cargando={cargando}
             onEliminarNota={handleEliminarNota}
             onSeleccionarNota={(hz) => setFrecuenciaActiva(hz)}
+            onNotaActualizada={handleNotaActualizada}
           />
         </div>
       </div>
